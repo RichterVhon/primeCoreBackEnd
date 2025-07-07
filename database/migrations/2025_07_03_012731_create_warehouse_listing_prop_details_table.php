@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,9 +14,12 @@ return new class extends Migration
     {
         Schema::create('warehouse_listing_prop_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('warehouse_listing_id')
-                ->constrained()
-                ->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'warehouse_listing_id',
+                'warehouse_listings',
+                'fk_warehouse_listing_prop_details_warehouse_listing'
+            );
             $table->string('unit_number')->nullable();
             $table->float('leasable_warehouse_area_on_the_ground_floor')->nullable();
             $table->float('leasable_warehouse_area_on_the_upper_floor')->nullable();

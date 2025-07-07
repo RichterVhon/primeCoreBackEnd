@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,12 +14,18 @@ return new class extends Migration
     {
         Schema::create('office_other_details_extn', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('office_space_listing_id')
-                ->constrained('office_space_listings')
-                ->onDelete('cascade');
-            $table->foreignId('other_detail_id')
-                ->constrained('other_details')
-                ->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'office_space_listing_id',
+                'office_space_listings',
+                'fk_office_other_details_office_listing'
+            );
+            SchemaHelpers::foreignKey(
+                $table,
+                'other_detail_id',
+                'other_details',
+                'fk_office_other_details_other_detail'
+            );
             $table->string('a/c_unit')->nullable();
             $table->string('a/c_type')->nullable();
             $table->decimal('a/c_rate', 10, 2)->nullable();

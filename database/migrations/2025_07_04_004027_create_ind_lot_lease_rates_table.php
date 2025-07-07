@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,9 +14,12 @@ return new class extends Migration
     {
         Schema::create('ind_lot_lease_rates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ind_lot_listing_id')
-                ->constrained('ind_lot_listings')
-                ->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'ind_lot_listing_id',
+                'ind_lot_listings',
+                'fk_ind_lot_lease_rates_ind_lot_listing'
+            );
             $table->decimal('rental_rate_sqm_for_open_area', 10, 2)->nullable();
             $table->decimal('rental_rate_sqm_for_covered_area', 10, 2)->nullable();
             $table->timestamps();

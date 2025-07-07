@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,10 +14,13 @@ return new class extends Migration
     {
         Schema::create('ind_lot_listing_property_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ind_lot_listing_id')
-                ->constrained('ind_lot_listings')
-                ->onDelete('cascade');
-            $table->float('lot_area')->nullable(); 
+            SchemaHelpers::foreignKey(
+                $table,
+                'ind_lot_listing_id',
+                'ind_lot_listings',
+                'fk_ind_lot_listing_property_details_ind_lot_listing'
+            );
+            $table->float('lot_area')->nullable();
             $table->string('lot_shape')->nullable();
             $table->float('frontage_width')->nullable();
             $table->float('depth')->nullable();

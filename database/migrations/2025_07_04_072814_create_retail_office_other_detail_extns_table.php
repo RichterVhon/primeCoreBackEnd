@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,12 +14,18 @@ return new class extends Migration
     {
         Schema::create('retail_office_other_detail_extns', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('retail_office_listing_id')
-                ->constrained('retail_office_listings')
-                ->onDelete('cascade');
-            $table->foreignId('other_detail_id')
-                ->constrained('other_details')
-                ->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'retail_office_listing_id',
+                'retail_office_listings',
+                'fk_retail_other_detail_retail_listing'
+            );
+            SchemaHelpers::foreignKey(
+                $table,
+                'other_detail_id',
+                'other_details',
+                'fk_retail_other_detail_other_detail'
+            );
             $table->string('pylon_availability')->nullable();
             $table->integer('total_floor_count')->nullable();
             $table->text('other_remarks')->nullable();

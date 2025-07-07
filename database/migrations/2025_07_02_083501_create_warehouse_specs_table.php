@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,12 @@ return new class extends Migration
     {
         Schema::create('warehouse_specs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('warehouse_listing_id')->constrained()->cascadeOnDelete();
+            SchemaHelpers::foreignKey(
+                $table,
+                'warehouse_listing_id',
+                'warehouse_listings',
+                'fk_warehouse_specs_warehouse_listing'
+            );
             $table->string('application_of_cusa')->nullable();
             $table->float('apex')->nullable();
             $table->float('shoulder_height')->nullable();

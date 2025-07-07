@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,8 +15,18 @@ return new class extends Migration
         Schema::create('contact_listing', function (Blueprint $table) {
             $table->id();
             $table->unique(['contact_id', 'listing_id']);
-            $table->foreignId('contact_id')->constrained()->onDelete('cascade');
-            $table->foreignId('listing_id')->constrained()->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'contact_id',
+                'contacts',
+                'fk_contact_listing_contact'
+            );
+            SchemaHelpers::foreignKey(
+                $table,
+                'listing_id',
+                'listings',
+                'fk_contact_listing_listing'
+            );
             $table->string('company')->nullable(); // Company name associated with the contact in
             $table->timestamps();
         });
