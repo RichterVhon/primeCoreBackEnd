@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Support\SchemaHelpers;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -13,8 +14,18 @@ return new class extends Migration
     {
         Schema::create('inquiries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('account_id')->constrained()->onDelete('cascade');
-            $table->foreignId('listing_id')->constrained()->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'account_id',
+                'accounts',
+                'fk_inquiries_account'
+            );
+            SchemaHelpers::foreignKey(
+                $table,
+                'listing_id',
+                'listings',
+                'fk_inquiries_listing'
+            );
             $table->string('status'); // can be ENUM: 'pending', 'responded', 'archived'
             $table->text('message');
             $table->dateTime('viewing_schedule')->nullable(); 

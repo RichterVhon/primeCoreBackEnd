@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,12 @@ return new class extends Migration
     {
         Schema::create('tenant_use_policies', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('other_detail_id')->constrained()->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'other_detail_id',
+                'other_details',
+                'fk_tenant_use_policies_other_details'
+            );
             $table->text('tenant_restrictions')->nullable(); // text, can be null
             $table->text('ideal_use')->nullable(); // text, can be null
             $table->timestamps();

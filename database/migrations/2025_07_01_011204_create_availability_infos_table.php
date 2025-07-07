@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchemaHelpers;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,18 @@ return new class extends Migration
     {
         Schema::create('availability_infos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('other_detail_id')->constrained()->onDelete('cascade');
+            SchemaHelpers::foreignKey(
+                $table,
+                'listing_id',
+                'listings',
+                'fk_availability_infos_listing'
+            );
+            SchemaHelpers::foreignKey(
+                $table,
+                'other_detail_id',
+                'other_details',
+                'fk_availability_infos_other_details'
+            );
             $table->date('date_of_availability'); // date
             $table->text('date_of_availability_remarks')->nullable(); // text, can be null
             $table->timestamps();
