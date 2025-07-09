@@ -11,6 +11,7 @@ class LeaseDocument extends Model
     use HasFactory;
     //use lease_documents for table name
     protected $fillable = [
+        'listing_id',
         'photos_and_property_documents_link',
         'professional_fee_structure',
     ];

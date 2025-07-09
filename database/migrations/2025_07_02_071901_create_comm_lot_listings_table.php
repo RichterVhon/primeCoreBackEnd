@@ -14,12 +14,6 @@ return new class extends Migration
     {
         Schema::create('comm_lot_listings', function (Blueprint $table) {
             $table->id();
-            SchemaHelpers::foreignKey(
-                $table,
-                'listing_id',
-                'listings',
-                'fk_comm_lot_listings_listing'
-            );
             $table->timestamps();
         });
     }

@@ -20,12 +20,11 @@ return new class extends Migration
                 'listings', 
                 'fk_locations_listing'
             );
-            $table->string('name');
             $table->string('province');
             $table->string('city');
             $table->string('district');
-            $table->decimal('google_coordinates_latitude', 10, 8);
-            $table->decimal('google_coordinates_longitude', 10, 8);
+            $table->decimal('google_coordinates_latitude', 11, 8);
+            $table->decimal('google_coordinates_longitude', 11, 8);
             $table->string('exact_address');
             $table->timestamps();
         });

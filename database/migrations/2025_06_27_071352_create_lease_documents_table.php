@@ -23,7 +23,7 @@ return new class extends Migration
                 'fk_lease_documents_listing'
             );
             $table->string('photos_and_property_documents_link')->nullable();
-            $table->json('professional_fee_structure')->nullable();
+            $table->string('professional_fee_structure')->nullable();
             $table->timestamps();
         });
     }

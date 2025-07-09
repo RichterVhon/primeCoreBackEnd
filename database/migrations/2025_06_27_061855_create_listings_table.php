@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Support\SchemaHelpers;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -13,7 +14,13 @@ return new class extends Migration
     {
         Schema::create('listings', function (Blueprint $table) {
             $table->id();
-            $table->string('status')->nullable();
+            SchemaHelpers::foreignKey(
+                $table,
+                'account_id',
+                'accounts',
+                'fk_listings_account'
+            );
+            $table->string('status')->default('draft');
             $table->date('date_uploaded')->nullable();
             $table->date('date_last_updated')->nullable();
             $table->string('project_name')->nullable();

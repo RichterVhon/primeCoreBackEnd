@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class RetailOfficeListing extends Model
 {
-    public function listing(): BelongsTo
-    {
-        return $this->belongsTo('App\Models\Listing');
-    }
 
+    use HasFactory;
     //para maging morph target ng Listing model
     public function listingMorph(): MorphOne
     {

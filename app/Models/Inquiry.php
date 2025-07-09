@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InquiryStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ class Inquiry extends Model
     ];
 
     protected $casts = [
-        'status' => 'string', // can be ENUM later on in the project
+        'status' => InquiryStatus::class, 
         'viewing_schedule' => 'datetime', // assuming this is a date-time field
     ];
 

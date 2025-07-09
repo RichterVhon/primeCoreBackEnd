@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -9,12 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfficeSpaceListing extends Model
 {
-    //para ma-reference yung listing_id sa warehouse_listings table
-    public function listing(): BelongsTo
-    {
-        return $this->belongsTo('App\Models\Listing');
-    }
-
+    use HasFactory;
     //para maging morph target ng Listing model
     public function listingMorph(): MorphOne
     {

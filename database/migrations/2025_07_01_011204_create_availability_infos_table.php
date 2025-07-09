@@ -16,12 +16,6 @@ return new class extends Migration
             $table->id();
             SchemaHelpers::foreignKey(
                 $table,
-                'listing_id',
-                'listings',
-                'fk_availability_infos_listing'
-            );
-            SchemaHelpers::foreignKey(
-                $table,
                 'other_detail_id',
                 'other_details',
                 'fk_availability_infos_other_details'
