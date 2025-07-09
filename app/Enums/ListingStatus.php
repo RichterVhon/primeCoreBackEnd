@@ -6,7 +6,7 @@ enum ListingStatus: string
 {
     case Available = "available";
 
-    case Unvailable = "unavailable";
+    case NotAvailable = "not available";
 
     case Draft = "draft";
 }

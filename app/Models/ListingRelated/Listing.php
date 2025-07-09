@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\AuthorityType;
 use App\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -25,7 +26,7 @@ class Listing extends Model
         'project_name',
         'property_name',
         'bd_incharge',
-        'authority_type', //enum di ko pa nagagawa to (since faker)
+        'authority_type', 
         'bd_securing_remarks',
         'listable_id',
         'listable_type', // ← this line is critical
@@ -35,6 +36,7 @@ class Listing extends Model
 
     protected $casts = [
         'status'=> ListingStatus::class,
+        'authority_type'=>AuthorityType::class,
     ];
 
 

@@ -20,8 +20,8 @@ return new class extends Migration
                 'listings',
                 'fk_other_details_listing'
             );
-            $table->boolean('electricity_meter')->default(false); // can be yes/no,
-            $table->boolean('water_meter')->default(false);
+            $table->string('electricity_meter')->nullable(); // can be yes/no,
+            $table->string('water_meter')->nullable();
             $table->integer('year_built')->nullable();
             $table->timestamps();
         });

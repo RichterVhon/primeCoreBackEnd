@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated\OtherDetailRelated;
 
+use App\Enums\IdealUse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 
@@ -25,6 +26,7 @@ class TenantUsePolicyFactory extends Factory
             'Business hours access only',
         ];
 
+        /*
         $uses = [
             'Ideal for co-working space',
             'Great for small retail',
@@ -32,11 +34,12 @@ class TenantUsePolicyFactory extends Factory
             'Perfect for residential lease',
             'Compatible with warehouse use',
         ];
+        */
 
         return [
             'other_detail_id' => OtherDetail::factory(),
             'tenant_restrictions' => $this->faker->optional(0.8)->randomElement($restrictions),
-            'ideal_use' => $this->faker->optional(0.8)->randomElement($uses),
+            'ideal_use' => $this->faker->optional(0.8)->randomElement(IdealUse::cases()),
         ];
     }
 }

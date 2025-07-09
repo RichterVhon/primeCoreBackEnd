@@ -12,7 +12,7 @@ class OfficeSpaceListing extends Model
 {
     use HasFactory;
     //para maging morph target ng Listing model
-    public function listingMorph(): MorphOne
+    public function listing(): MorphOne
     {
         return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable');
     }
