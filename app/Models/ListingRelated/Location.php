@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\Province;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,10 @@ class Location extends Model
         'google_coordinates_latitude',
         'google_coordinates_longitude',
         'exact_address',
+    ];
+
+    protected $casts = [
+        'province' => Province::class,
     ];
 
     public function listing(): BelongsTo

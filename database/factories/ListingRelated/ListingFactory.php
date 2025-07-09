@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated;
 
+use App\Enums\AuthorityType;
 use App\Models\Account;
 use App\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,7 +27,7 @@ class ListingFactory extends Factory
             'project_name' => $this->faker->optional(0.5)->company,
             'property_name' => $this->faker->optional(0.9)->streetName,
             'bd_incharge' => $this->faker->optional(0.8)->name,
-            'authority_type' => $this->faker->optional(0.8)->randomElement(['exclusive', 'non-exclusive']), 
+            'authority_type' => $this->faker->randomElement(AuthorityType::cases()), 
             'bd_securing_remarks' => $this->faker->optional(0.8)->paragraph,
             'listable_id' => null,              // polymorphic
             'listable_type' => null,

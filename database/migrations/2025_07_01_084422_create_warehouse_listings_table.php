@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('warehouse_listings', function (Blueprint $table) {
             $table->id();
-            $table->boolean('PEZA_accredited')->default(false); // Assuming this is a field for Warehouse listings
+            $table->string('PEZA_accredited');
             $table->timestamps();
         });
     }

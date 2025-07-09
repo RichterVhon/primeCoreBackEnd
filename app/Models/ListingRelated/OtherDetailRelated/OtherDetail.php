@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated\OtherDetailRelated;
 
+use App\Enums\Meter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,8 +19,8 @@ class OtherDetail extends Model
     ];
 
     protected $casts = [
-        'electricity_meter' => 'boolean', //can be yes/no, create enum later on sa project na
-        'water_meter' => 'boolean',
+        'electricity_meter' => Meter::class, 
+        'water_meter' => Meter::class,
         'year_built' => 'integer',
     ];
 

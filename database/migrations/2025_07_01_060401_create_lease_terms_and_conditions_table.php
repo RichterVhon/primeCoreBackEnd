@@ -24,7 +24,7 @@ return new class extends Migration
             $table->float('cusa_sqm')->nullable();
             $table->float('security_deposit')->nullable();
             $table->float('advance_rental')->nullable();
-            $table->boolean('application_of_advance')->default(false);
+            $table->string('application_of_advance')->default(false);
             $table->integer('min_lease')->nullable();
             $table->integer('max_lease')->nullable();
             $table->float('escalation_rate')->nullable();

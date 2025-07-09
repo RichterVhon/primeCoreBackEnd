@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\ListingRelated;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class IndLotLeaseRates extends Model
 {
+    use HasFactory;
     protected $fillable = [
+        'ind_lot_listing_id',
         'rental_rate_sqm_for_open_area',
         'rental_rate_sqm_for_covered_area',
     ];

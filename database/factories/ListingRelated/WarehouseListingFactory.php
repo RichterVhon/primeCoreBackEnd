@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated;
 
+use App\Enums\AccreditationType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,7 @@ class WarehouseListingFactory extends Factory
     public function definition(): array
     {
         return [
-            'PEZA_accredited' => $this->faker->boolean(60), //60% chance maging true
+            'PEZA_accredited' => $this->faker->randomElement(AccreditationType::cases()),
         ];
     }
 }

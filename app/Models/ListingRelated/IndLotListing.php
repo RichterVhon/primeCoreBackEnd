@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\AccreditationType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -15,18 +16,18 @@ class IndLotListing extends Model
         'PEZA_accredited',
     ];  
     protected $casts = [
-        'PEZA_accredited' => 'boolean',
+        'PEZA_accredited' => AccreditationType::class,
     ];
 
     //para maging morph target ng Listing model
-    public function listingMorph(): MorphOne
+    public function listing(): MorphOne
     {
         return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable');
     }
 
     public function indLotLeaseRates(): HasOne
     {
-        return $this->hasOne(\App\Models\IndLotLeaseRates::class, 'ind_lot_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\IndLotLeaseRates::class, 'ind_lot_listing_id');
     }
 
     public function indLotTurnoverConditions(): HasOne
