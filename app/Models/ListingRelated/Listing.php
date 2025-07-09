@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,28 +18,25 @@ class Listing extends Model
     // hindi ko na lagay here yung name ng table, basta rapat ang name ng table ng listing ay "listings" (matic na sa laravel kasi yun)
 
     protected $fillable = [
-        'status', //enum
+        'account_id',
+        'status', 
         'date_last_updated',
         'date_uploaded',
         'project_name',
         'property_name',
         'bd_incharge',
-        'authority_type', //enum
+        'authority_type', //enum di ko pa nagagawa to (since faker)
         'bd_securing_remarks',
+        'listable_id',
+        'listable_type', // ← this line is critical
         // gawan ng helper function para sa mga remarks? para HasRemarks nalang
-        // 'listings_category_id', comment ko to kasi i'll use the relationship instead (morphTo)
-        // 'listings_category_type'
+
     ];
 
-    //remember to include morphMap sa appserviceprovider, under boot?? watch yt vid, check if tama to
-    /*
-        Relation::morphMap([
-        'warehouse' => \App\Models\WarehouseCategory::class,
-        'retail' => \App\Models\RetailCategory::class,
-        'industrial' => \App\Models\IndustrialCategory::class,
-        // Add as many as you like
-    ]);
-    */
+    protected $casts = [
+        'status'=> ListingStatus::class,
+    ];
+
 
     public function location(): HasOne
     {

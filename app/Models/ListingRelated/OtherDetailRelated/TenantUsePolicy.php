@@ -11,6 +11,7 @@ class TenantUsePolicy extends Model
     use HasFactory;
 
     protected $fillable = [
+        'other_detail_id',
         'tenant_restrictions',
         'ideal_use',
     ];

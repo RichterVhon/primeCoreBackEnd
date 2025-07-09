@@ -14,12 +14,6 @@ return new class extends Migration
     {
         Schema::create('ind_lot_listings', function (Blueprint $table) {
             $table->id();
-            SchemaHelpers::foreignKey(
-                $table,
-                'listing_id',
-                'listings',
-                'fk_ind_lot_listings_listing'
-            );
             $table->boolean('PEZA_accredited')->default(false); // Assuming this is a field for Indlot listings
             $table->timestamps();   
         });

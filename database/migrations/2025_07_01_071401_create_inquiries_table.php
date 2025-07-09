@@ -26,7 +26,7 @@ return new class extends Migration
                 'listings',
                 'fk_inquiries_listing'
             );
-            $table->string('status'); // can be ENUM: 'pending', 'responded', 'archived'
+            $table->string('status'); 
             $table->text('message');
             $table->dateTime('viewing_schedule')->nullable(); 
             $table->timestamps();

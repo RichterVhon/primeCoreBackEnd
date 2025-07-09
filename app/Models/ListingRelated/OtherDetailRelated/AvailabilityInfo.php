@@ -11,6 +11,7 @@ class AvailabilityInfo extends Model
     use HasFactory;
 
     protected $fillable = [
+        'other_detail_id',
         'date_of_availability', // date
         // copilot suggested date available from and to? review later on 
         'date_of_availability_remarks', // text 

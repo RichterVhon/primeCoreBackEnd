@@ -12,6 +12,7 @@ class Location extends Model
 
     //use locations for table name
     protected $fillable = [
+        'listing_id',
         'province',
         'city',
         'district',

@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\EscalationFrequency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ class LeaseTermsAndConditions extends Model
     use HasFactory;
 
     protected $fillable = [
+        'listing_id',
         'monthly_rate',
         'cusa_sqm',
         'security_deposit',
@@ -34,7 +36,7 @@ class LeaseTermsAndConditions extends Model
         'min_lease' => 'integer',
         'max_lease' => 'integer',
         'escalation_rate' => 'float',
-        //'escalation_frequency' => 'string', review to, can be enum later on in the project
+        'escalation_frequency' => EscalationFrequency::class,
     ];
 
 
@@ -47,4 +49,6 @@ class LeaseTermsAndConditions extends Model
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeLeaseTermsAndConditionsExtn::class, 'lease_terms_id');
     }
+
+
 }

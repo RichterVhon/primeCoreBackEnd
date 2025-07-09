@@ -11,6 +11,7 @@ class OtherDetail extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'listing_id',
         'electricity_meter',
         'water_meter',
         'year_built',
@@ -37,7 +38,7 @@ class OtherDetail extends Model
         return $this->belongsTo(\App\Models\ListingRelated\Listing::class);
     }
 
-    public function officeOtherDetail(): HasOne
+    public function officeOtherDetailExtn(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeOtherDetailExtn::class);
     }

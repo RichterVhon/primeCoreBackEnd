@@ -28,7 +28,7 @@ return new class extends Migration
             $table->integer('min_lease')->nullable();
             $table->integer('max_lease')->nullable();
             $table->float('escalation_rate')->nullable();
-            $table->string('escalation_frequency')->nullable(); // Can be enum later on
+            $table->string('escalation_frequency')->nullable(); 
             $table->date('escalation_effectivity')->nullable(); // Can be enum later on
             $table->text('remarks')->nullable();
             $table->timestamps();

@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class WarehouseListing extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'PEZA_accredited',
@@ -17,11 +19,6 @@ class WarehouseListing extends Model
         'PEZA_accredited' => 'boolean',
     ];
 
-    //para ma-reference yung listing_id sa warehouse_listings table
-    public function listing(): BelongsTo
-    {
-        return $this->belongsTo('App\Models\Listing');
-    }
 
     //para maging morph target ng Listing model
     public function listingMorph(): MorphOne

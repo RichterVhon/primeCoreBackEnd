@@ -14,12 +14,6 @@ return new class extends Migration
     {
         Schema::create('office_space_listings', function (Blueprint $table) {
             $table->id();
-            SchemaHelpers::foreignKey(
-                $table,
-                'listing_id',
-                'listings',
-                'fk_office_space_listings_listing'
-            );
             $table->timestamps();
         });
     }
