@@ -18,7 +18,6 @@ use App\Models\ListingRelated\CommLotListing;
 
 use App\Models\ListingRelated\WarehouseSpecs;
 
-use App\Models\ListingRelated\IndLotLeaseRates;
 
 use App\Models\ListingRelated\WarehouseListing;
 use App\Models\ListingRelated\OfficeSpaceListing;
@@ -32,8 +31,6 @@ use App\Models\ListingRelated\WarehouseListingPropDetails;
 use App\Models\ListingRelated\WarehouseTurnoverConditions;
 use App\Models\ListingRelated\IndLotListingPropertyDetails;
 use App\Models\ListingRelated\CommLotListingPropertyDetails;
-
-use App\Models\ListingRelated\IndLotListingPropertyDetails;
 
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 use Database\Factories\ListingRelated\WarehouseListingFactory;
