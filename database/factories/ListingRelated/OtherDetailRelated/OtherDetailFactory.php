@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated\OtherDetailRelated;
 
+use App\Enums\Meter;
 use App\Models\ListingRelated\Listing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,8 +20,8 @@ class OtherDetailFactory extends Factory
     {
         return [
             'listing_id' => Listing::factory(),
-            'electricity_meter' => $this->faker->boolean(80), // 80% chance true
-            'water_meter' => $this->faker->boolean(75),       // 75% chance true
+            'electricity_meter' => $this->faker->randomElement(Meter::cases()), 
+            'water_meter' => $this->faker->randomElement(Meter::cases()),       
             'year_built' => $this->faker->year(),
         ];
     }

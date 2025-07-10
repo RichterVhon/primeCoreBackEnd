@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\ApplicationOfAdvance;
 use App\Enums\EscalationFrequency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -32,7 +33,7 @@ class LeaseTermsAndConditions extends Model
         'cusa_sqm' => 'float',
         'security_deposit' => 'float',
         'advance_rental' => 'float',
-        'application_of_advance' => 'boolean',
+        'application_of_advance' => ApplicationOfAdvance::class,
         'min_lease' => 'integer',
         'max_lease' => 'integer',
         'escalation_rate' => 'float',

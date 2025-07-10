@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated;
 
+use App\Enums\Province;
 use App\Models\ListingRelated\Listing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class LocationFactory extends Factory
     {
         return [
             'listing_id' => Listing::factory(), 
-            'province' => $this->faker->state(),
+            'province' => $this->faker->randomElement(Province::cases()),
             'city' => $this->faker->city(),
             'district' => $this->faker->streetName(),
             'google_coordinates_latitude' => $this->faker->latitude($min = 5.0, $max = 20.0), // Philippine bounds

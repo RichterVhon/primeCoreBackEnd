@@ -2,8 +2,9 @@
 
 namespace App\Enums;
 
-enum LotShape:string
+enum LotShape: string
 {
     case Regular = 'regular';
+
     case Irregular = 'irregular';
 }

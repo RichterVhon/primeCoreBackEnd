@@ -2,14 +2,23 @@
 
 namespace App\Models\ListingRelated;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+use App\Enums\LotShape;
+use App\Enums\Offering;
+use App\Enums\ZoningClassification;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class IndLotListingPropertyDetails extends Model
 {
     use HasFactory;
+
     protected $fillable = [
+        'ind_lot_listing_id',
         'lot_area',
         'lot_shape',
         'frontage_width',
@@ -20,11 +29,11 @@ class IndLotListingPropertyDetails extends Model
 
     protected $casts = [
         'lot_area' => 'float',
-        //'lot_shape' => 'string', // can be enum later on in the project
+        'lot_shape' => LotShape::class,
         'frontage_width' => 'float',
         'depth' => 'float',
-        //'zoning_classification' => 'string', // can be enum later on in the project
-        //'offering' => 'string', // can be enum later on in the project
+        'zoning_classification' => ZoningClassification::class, 
+        'offering' => Offering::class, 
     ];
 
     public function indLotListing(): BelongsTo

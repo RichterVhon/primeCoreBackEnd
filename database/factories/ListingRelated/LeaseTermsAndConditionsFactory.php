@@ -2,6 +2,7 @@
 
 namespace Database\Factories\ListingRelated;
 
+use App\Enums\ApplicationOfAdvance;
 use App\Enums\EscalationFrequency;
 use App\Models\ListingRelated\Listing;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -31,7 +32,7 @@ class LeaseTermsAndConditionsFactory extends Factory
             'cusa_sqm' => $this->faker->optional()->randomFloat(2, 50, 200),
             'security_deposit' => $this->faker->optional()->randomFloat(2, 5000, 100000),
             'advance_rental' => $this->faker->optional()->randomFloat(2, 5000, 100000),
-            'application_of_advance' => $this->faker->boolean(40),
+            'application_of_advance' => $this->faker->randomElement(ApplicationOfAdvance::cases()),
             'min_lease' => $minLease,
             'max_lease' => $maxLease,
             'escalation_rate' => $shouldEscalate ? $this->faker->randomFloat(2, 3, 8) : null,

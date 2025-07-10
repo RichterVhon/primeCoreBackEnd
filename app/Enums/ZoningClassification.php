@@ -2,11 +2,10 @@
 
 namespace App\Enums;
 
-enum ZoningClassification:string
+enum ZoningClassification: string
 {
-    case Commercial = 'commercial';  
     case Residential = 'residential';
+    case Commercial = 'commercial';
     case Industrial = 'industrial';
     case Agricultural = 'agricultural';
-
 }
