@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('handover')->nullable(); //make enum later on in the project
             $table->string('ceiling')->nullable();
             $table->string('wall')->nullable();
+            $table->string('floor')->nullable();
             $table->string('turnover_remarks')->nullable();
             $table->timestamps();
         });

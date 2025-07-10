@@ -2,12 +2,14 @@
 
 namespace App\Models\ListingRelated;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WarehouseLeaseRates extends Model
 {
 
+    use HasFactory;
     //attach ko to sa warehouse specs, since ayun yung parang tumatayong lease terms and conditions extension ng warehouse listing
     // tas eto yung extension ng warehouse specs 
     protected $fillable = [
@@ -24,7 +26,7 @@ class WarehouseLeaseRates extends Model
 
     public function warehouseListing(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\ListingRelated\WarehouseListing::class);
+        return $this->belongsTo(\App\Models\ListingRelated\WarehouseListing::class, 'warehouse_listing_id');
     }
 
 }

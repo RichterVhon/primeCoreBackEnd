@@ -26,7 +26,7 @@ class IndLotListing extends Model
 
     public function indLotLeaseRates(): HasOne
     {
-        return $this->hasOne(\App\Models\IndLotLeaseRates::class, 'ind_lot_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\IndLotLeaseRates::class, 'ind_lot_listing_id');
     }
 
     public function indLotTurnoverConditions(): HasOne

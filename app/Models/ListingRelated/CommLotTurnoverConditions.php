@@ -2,13 +2,17 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\LotCondition;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CommLotTurnoverConditions extends Model
 {
+    use HasFactory;
     protected $fillable = [
-        'lot_condition', // can be enum later on in the project
+        'comm_lot_listing_id',
+        'lot_condition' => LotCondition::class,
         'turnover_remarks',
     ];
 

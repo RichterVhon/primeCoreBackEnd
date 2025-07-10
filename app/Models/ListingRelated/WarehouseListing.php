@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Models\WarehouseLeaseRate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -38,7 +39,13 @@ class WarehouseListing extends Model
 
     public function warehouseSpecs(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\WarehouseSpecs::class, 'lease_terms_and_conditions_id');
+        return $this->hasOne(\App\Models\ListingRelated\WarehouseSpecs::class);
     }
+
+    public function warehouseLeaseRate(): HasOne
+{
+    return $this->hasOne(WarehouseLeaseRates::class);
+}
+
 
 }
