@@ -4,14 +4,12 @@ namespace App\Models\ListingRelated;
 
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 use App\Enums\LotShape;
 use App\Enums\Offering;
 use App\Enums\ZoningClassification;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 class IndLotListingPropertyDetails extends Model
 {
