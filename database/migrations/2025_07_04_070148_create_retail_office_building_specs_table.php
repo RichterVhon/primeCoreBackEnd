@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('handover')->nullable();
             $table->string('ceiling')->nullable();
             $table->string('wall')->nullable();
+            $table->string('floor')->nullable();
             $table->string('building_ops')->nullable();
             $table->string('backup_power')->nullable();
             $table->string('provision_for_genset')->nullable();

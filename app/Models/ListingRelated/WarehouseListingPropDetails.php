@@ -2,12 +2,16 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\YesNo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WarehouseListingPropDetails extends Model
-{
+{   
+    use HasFactory;
     protected $fillable =[
+        'warehouse_listing_id',
         'unit_number',
         'leasable_warehouse_area_on_the_ground_floor',
         'leasable_warehouse_area_on_the_upper_floor',
@@ -19,13 +23,14 @@ class WarehouseListingPropDetails extends Model
     ];
 
     protected $casts = [
+        'warehouse_listing_id',
         'leasable_warehouse_area_on_the_ground_floor' => 'float',
         'leasable_warehouse_area_on_the_upper_floor' => 'float',
         'leasable_office_area' => 'float',
         'total_leasable_area' => 'float',
         'total_open_area' => 'float',
         'total_leasable_area_open_covered' => 'float',
-        'FDAS' => 'float',
+        'FDAS' => YesNo::class,
     ];
 
     public function warehouseListing(): BelongsTo

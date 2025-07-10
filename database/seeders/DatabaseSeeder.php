@@ -9,19 +9,34 @@ use App\Models\Contact;
 use App\Models\Inquiry;
 use App\Support\MorphHelper;
 use Illuminate\Database\Seeder;
+use App\Models\ListingRelated\IndLotLeaseRates;
 use App\Models\ListingRelated\Listing;
 use App\Models\ListingRelated\Location;
 use App\Models\ListingRelated\IndLotListing;
 use App\Models\ListingRelated\LeaseDocument;
 use App\Models\ListingRelated\CommLotListing;
+
+use App\Models\ListingRelated\WarehouseSpecs;
+
 use App\Models\ListingRelated\IndLotLeaseRates;
+
 use App\Models\ListingRelated\WarehouseListing;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Models\ListingRelated\RetailOfficeListing;
+use App\Models\ListingRelated\WarehouseLeaseRates;
 use App\Models\ListingRelated\LeaseTermsAndConditions;
 use App\Models\ListingRelated\IndLotTurnoverConditions;
+
+use App\Models\ListingRelated\CommLotTurnoverConditions;
+use App\Models\ListingRelated\WarehouseListingPropDetails;
+use App\Models\ListingRelated\WarehouseTurnoverConditions;
 use App\Models\ListingRelated\IndLotListingPropertyDetails;
+use App\Models\ListingRelated\CommLotListingPropertyDetails;
+
+use App\Models\ListingRelated\IndLotListingPropertyDetails;
+
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
+use Database\Factories\ListingRelated\WarehouseListingFactory;
 use App\Models\ListingRelated\OtherDetailRelated\TenantUsePolicy;
 use App\Models\ListingRelated\OtherDetailRelated\AvailabilityInfo;
 
@@ -48,7 +63,6 @@ class DatabaseSeeder extends Seeder
         //$agentaccounts = Account::where('role', 'agent')->get();
         
 
-        //$indlots = IndLotListing::factory()->count(10)->create();
 
         $indlots = IndLotListing::factory()
             ->has(IndLotLeaseRates::factory()) 
@@ -56,9 +70,22 @@ class DatabaseSeeder extends Seeder
             ->has(IndLotTurnoverConditions::factory()) 
             ->count(10) 
             ->create();
-            
-        $warehouses = WarehouseListing::factory()->count(10)->create();
-        $commlots = CommLotListing::factory()->count(10)->create();
+
+        $warehouses = WarehouseListing::factory()
+            ->has(WarehouseTurnoverConditions::factory()) 
+            ->has(WarehouseListingPropDetails::factory()) 
+            ->has(WarehouseLeaseRates::factory()) 
+            ->has(WarehouseSpecs::factory())
+            ->count(10) 
+            ->create();
+
+        $commlots = CommLotListing::factory()
+            ->has(CommLotTurnoverConditions::factory()) 
+            ->has(CommLotListingPropertyDetails::factory()) 
+            ->count(10) 
+            ->create(); 
+       
+
         $retails = RetailOfficeListing::factory()->count(10)->create();
         $offices = OfficeSpaceListing::factory()->count(10)->create();
 
