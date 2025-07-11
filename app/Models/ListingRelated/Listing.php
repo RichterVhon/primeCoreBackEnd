@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Traits\HasSearch;
 use App\Enums\AuthorityType;
 use App\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Listing extends Model
 {
     use HasFactory;
-    
+    use HasSearch;
     // hindi ko na lagay here yung name ng table, basta rapat ang name ng table ng listing ay "listings" (matic na sa laravel kasi yun)
 
     protected $fillable = [
@@ -39,6 +40,25 @@ class Listing extends Model
         'status'=> ListingStatus::class,
         'authority_type'=>AuthorityType::class,
     ];
+
+    public static function searchableFields(): array
+    {
+        return [
+            'project_name',
+            'property_name',
+            'bd_incharge',
+            'authority_type',
+            'listable_type',
+            'custom_listable_id',
+            // 'account.email',
+            // 'category.name'
+        ];
+    }
+
+    public static function filterableFields(): array
+    {
+        return ['status', 'date_uploaded', 'date_last_updated'];
+    }
 
 
     public function location(): HasOne

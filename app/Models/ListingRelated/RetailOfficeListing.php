@@ -43,5 +43,9 @@ class RetailOfficeListing extends Model
         return $this->hasOne(\App\Models\ListingRelated\RetailOfficeBuildingSpecs::class, 'retail_office_listing_id');
     }
 
+    public function retailOfficeOtherDetailsExtn(): HasOne{
+        return $this->hasOne(\App\Models\ListingRelated\RetailOfficeOtherDetailExtn::class, 'retail_office_listing_id');
+    }
+
     
 }
