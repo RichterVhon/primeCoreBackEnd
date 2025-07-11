@@ -90,30 +90,35 @@ class DatabaseSeeder extends Seeder
             'listable_id' => $item->id,
             'listable_type' => MorphHelper::getMorphAlias(IndLotListing::class),
             'account_id' => $agentAccounts->random()->id,
+            'custom_listable_id' => $item->custom_id
         ]));
 
         $warehouses->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
             'listable_type' => MorphHelper::getMorphAlias(WarehouseListing::class),
             'account_id' => $agentAccounts->random()->id,
+            'custom_listable_id' => $item->custom_id
         ]));
 
         $commlots->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
             'listable_type' => MorphHelper::getMorphAlias(CommLotListing::class),
             'account_id' => $agentAccounts->random()->id,
+            'custom_listable_id' => $item->custom_id
         ]));
 
         $retails->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
             'listable_type' => MorphHelper::getMorphAlias(RetailOfficeListing::class),
             'account_id' => $agentAccounts->random()->id,
+            'custom_listable_id' => $item->custom_id
         ]));
 
         $offices->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
             'listable_type' => MorphHelper::getMorphAlias(OfficeSpaceListing::class),
             'account_id' => $agentAccounts->random()->id,
+            'custom_listable_id' => $item->custom_id
         ]));
 
         $contacts = Contact::factory()->count(15)->create();

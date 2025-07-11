@@ -14,6 +14,7 @@ return new class extends Migration
     {
         Schema::create('retail_office_listings', function (Blueprint $table) {
             $table->id();
+            $table->string('custom_id')->unique()->nullable();
             $table->timestamps();
         });
     }

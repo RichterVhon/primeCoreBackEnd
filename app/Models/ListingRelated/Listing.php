@@ -29,6 +29,7 @@ class Listing extends Model
         'authority_type', 
         'bd_securing_remarks',
         'listable_id',
+        'custom_listable_id',
         'listable_type', // ← this line is critical
         // gawan ng helper function para sa mga remarks? para HasRemarks nalang
 
@@ -84,5 +85,13 @@ class Listing extends Model
     public function listable(): MorphTo 
     {
         return $this->morphTo();
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($listing) {
+            $listing->load('listable');
+            $listing->custom_listable_id = $listing->listable->custom_id ?? 'UNSET';
+        });
     }
 }

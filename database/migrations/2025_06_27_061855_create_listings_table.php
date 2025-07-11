@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text('bd_securing_remarks')->nullable();
 
             $table->morphs('listable'); // This will create 'listable_id' and 'listable_type' columns for polymorphic relations
+            $table->string('custom_listable_id')->nullable();
             $table->timestamps();
         });
     }

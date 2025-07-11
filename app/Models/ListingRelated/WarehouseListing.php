@@ -7,6 +7,7 @@ use App\Models\WarehouseLeaseRate;
 
 use App\Enums\AccreditationType;
 
+use App\Traits\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -16,13 +17,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class WarehouseListing extends Model
 {
     use HasFactory;
+    use HasCustomId;
 
     protected $fillable = [
+        'custom_id',
         'PEZA_accredited',
     ];  
     protected $casts = [
         'PEZA_accredited' => AccreditationType::class,
     ];
+
+    public function customIdPrefix(): string
+    {
+        return 'WA';
+    }
 
 
     //para maging morph target ng Listing model
