@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Traits\HasCustomId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,8 +11,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CommLotListing extends Model
 {
-
     use HasFactory;
+    use HasCustomId;
+
+    protected $fillable = [
+        'custom_id',
+    ]; 
+    public function customIdPrefix(): string
+    {
+        return 'CLT';
+    }
+
+    
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {

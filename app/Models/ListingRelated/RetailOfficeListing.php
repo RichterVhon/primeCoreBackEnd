@@ -2,6 +2,7 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Traits\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -10,8 +11,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class RetailOfficeListing extends Model
 {
-
     use HasFactory;
+    use HasCustomId;
+    protected $fillable = [
+        'custom_id',
+    ]; 
+
+    public function customIdPrefix(): string
+    {
+        return 'RSP';
+    }
+    
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {

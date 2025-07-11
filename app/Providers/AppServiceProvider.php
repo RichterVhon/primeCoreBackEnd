@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,12 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Relation::morphMap([
-            'Retail Office' => \App\Models\ListingRelated\RetailOfficeListing::class,
-            'Industrial Warehouse' => \App\Models\ListingRelated\WarehouseListing::class,
-            'Industrial Lot' => \App\Models\ListingRelated\IndLotListing::class,
-            'Commercial Lot'=> \App\Models\ListingRelated\CommLotListing::class,
-            'Office Space'=> \App\Models\ListingRelated\OfficeSpaceListing::class,
-        ]);
+        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
+            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+        });
     }
 }

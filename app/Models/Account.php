@@ -6,8 +6,9 @@ use App\Enums\AccountRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Account extends Model
+class Account extends Authenticatable
 {
     use HasFactory;
 

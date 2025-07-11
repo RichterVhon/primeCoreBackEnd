@@ -2,15 +2,26 @@
 
 namespace App\Models\ListingRelated;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OfficeSpaceListing extends Model
 {
     use HasFactory;
+    use HasCustomId;
+    protected $fillable = [
+        'custom_id',
+    ]; 
+
+    public function customIdPrefix(): string
+    {
+        return 'OSP';
+    }
+
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {
