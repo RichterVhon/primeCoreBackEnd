@@ -2,16 +2,22 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\TaxOnCusa;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfficeLeaseTermsAndConditionsExtn extends Model
 {
+
+    use HasFactory;
+
     protected $fillable = [
-        'tax_on_cusa',
+        'tax_on_cusa' => TaxOnCusa::class,
         'cusa_on_parking',
         'parking_rate_slot',
         'parking_allotment',
+        'office_space_listing_id',
     ];
 
     protected $casts = [

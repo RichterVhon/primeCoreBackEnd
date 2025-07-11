@@ -2,11 +2,18 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\AcUnitType;
+use App\Enums\BackupPowerType;
+use App\Enums\FiberOpticCapability;
+use App\Enums\ToiletType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfficeOtherDetailExtn extends Model
 {
+    use HasFactory;
+
     protected $fillable= [
         'a/c_unit',
         'a/c_type',
@@ -21,23 +28,24 @@ class OfficeOtherDetailExtn extends Model
         'private_toilet',
         'common_toilet',
         'tenant_restrictions',
-        //'electricity_meter', already exists in general otherdertails
-        //'water_meter', already exists in general otherdertails
+        'electricity_meter',
+        'water_meter',
         'year_built',
         'total_floor_count',
         'other_remarks',
+        'office_space_listing_id',
     ];
 
     protected $casts = [
-        //'ac_unit' => 'string', // can be enum later on in the project
+        'ac_unit' => AcUnitType::class, // can be enum later on in the project
         'a/c_rate' => 'float',
         'cusa_on_ac' => 'float',
-        //'backup_power' => 'float', // can be enum later on in the project
-        //'fiber_optic_capability' => 'string', // can be enum later on in the project
+        'backup_power' => BackupPowerType::class, // can be enum later on in the project
+        'fiber_optic_capability' => FiberOpticCapability::class, // can be enum later on in the project
         'passenger_elevators' => 'integer',
         'service_elevators' => 'integer',
-        //'private_toilet' => 'string', // can be enum later on in the project
-        //'common_toilet' => 'string', // can be enum later on in the project
+        'private_toilet' => ToiletType::class, // can be enum later on in the project
+        'common_toilet' => ToiletType::class, // can be enum later on in the project
         'total_floor_count' => 'integer',
     ];
 
@@ -48,6 +56,7 @@ class OfficeOtherDetailExtn extends Model
 
     public function otherDetail(): BelongsTo
     {
-        return $this->belongsTo(OtherDetailRelated\OtherDetail::class, 'office_space_listing_id');
+        return $this->belongsTo(OtherDetailRelated\OtherDetail::class, 'other_detail_id');
     }
+
 }

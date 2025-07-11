@@ -49,7 +49,7 @@ class OfficeSpaceListing extends Model
         return $this->hasOne(\App\Models\ListingRelated\OfficeOtherDetailExtn::class, 'office_space_listing_id');
     }
 
-    public function officeListingPropDetails(): HasOne
+    public function officeListingPropertyDetails(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeListingPropertyDetails::class, 'office_space_listing_id');
     }

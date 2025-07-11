@@ -29,7 +29,7 @@ return new class extends Migration
                 'fk_office_lease_terms_lease_terms'
             );
 
-            $table->string('tax_on_cusa');
+            $table->string('tax_on_cusa')-> nullable();
             $table->decimal('cusa_on_parking', 10, 2); 
             $table->decimal('parking_rate_slot', 10, 2);
             $table->integer('parking_allotment')->default(0); 

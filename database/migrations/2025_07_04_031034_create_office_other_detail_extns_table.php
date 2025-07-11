@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('office_other_details_extn', function (Blueprint $table) {
+        Schema::create('office_other_detail_extns', function (Blueprint $table) {
             $table->id();
             SchemaHelpers::foreignKey(
                 $table,
@@ -39,7 +39,9 @@ return new class extends Migration
             $table->string('private_toilet')->nullable();
             $table->string('common_toilet')->nullable();
             $table->string('tenant_restrictions')->nullable();
-            $table->string('year_built')->nullable();
+            $table->string('electric_meter')->nullable();
+            $table->string('water_meter')->nullable();
+            $table->integer('year_built')->nullable();
             $table->integer('total_floor_count')->nullable();
             $table->text('other_remarks')->nullable();
             $table->timestamps();
@@ -51,6 +53,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('office_other_details_extn');
+        Schema::dropIfExists('office_other_detail_extns');
     }
 };
