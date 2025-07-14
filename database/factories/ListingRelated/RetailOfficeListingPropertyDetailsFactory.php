@@ -4,8 +4,6 @@ namespace Database\Factories\ListingRelated;
 
 use App\Models\ListingRelated\RetailOfficeListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\ListingRelated\RetailOfficeListingPropertyDetails;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RetailOfficeListingPropertyDetails>
