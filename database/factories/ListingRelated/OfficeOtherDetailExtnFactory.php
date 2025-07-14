@@ -48,6 +48,7 @@ class OfficeOtherDetailExtnFactory extends Factory
         'other_remarks' => $this->faker->paragraph(),
         'electric_meter' => $otherDetail->electricity_meter->value,
         'water_meter' => $otherDetail->water_meter-> values,
+        'office_space_listing_id' => OfficeSpaceListing::factory(),
         ];
     }
 }

@@ -2,14 +2,24 @@
 
 namespace App\Models\ListingRelated;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RetailOfficeTurnoverConditions extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'frontage_turnover',
         'turnover_remarks',
+        'frontage_turnover',
+        'retail_office_listing_id',
+    ];
+
+    protected $casts = [
+        'turnover_remarks' => 'string',
+        'frontage_turnover' => 'float',
+        'retail_office_listing_id' => RetailOfficeListing::class,
     ];
 
     public function retailOfficeListing(): BelongsTo

@@ -23,7 +23,7 @@ class OfficeLeaseTermsAndConditionsExtnFactory extends Factory
             'cusa_on_parking' => $this ->faker -> randomFloat(2,50.00,125.00),
             'parking_rate_slot' => $this ->faker -> randomFloat(2,5000.00,10000.00),
             'parking_allotment' => $this ->faker -> numberBetween(3,5), 
-            'office_space_listing_id' => OfficeSpaceListing::factory(),
+            'office_space_listing_id' => null,
         ];
     }
 }

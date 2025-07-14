@@ -2,9 +2,10 @@
 
 namespace Database\Factories\ListingRelated;
 
-use App\Enums\AuthorityType;
 use App\Models\Account;
+use App\Enums\AuthorityType;
 use App\Enums\ListingStatus;
+use App\Models\ListingRelated\OfficeSpaceListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +21,7 @@ class ListingFactory extends Factory
     public function definition(): array
     {
         return [
+            'listable_type' => OfficeSpaceListing::class,
             'account_id' => Account::factory(),
             'status' => $this->faker->randomElement(ListingStatus::cases()),
             'date_uploaded' => $uploaded = $this->faker->optional(0.8)->dateTimeBetween('-2 months', 'now'),

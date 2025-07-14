@@ -9,9 +9,9 @@ use App\Models\Contact;
 use App\Models\Inquiry;
 use App\Support\MorphHelper;
 use Illuminate\Database\Seeder;
-use App\Models\ListingRelated\IndLotLeaseRates;
 use App\Models\ListingRelated\Listing;
 use App\Models\ListingRelated\Location;
+use App\Models\ListingRelated\OfficeSpecs;
 use App\Models\ListingRelated\IndLotListing;
 use App\Models\ListingRelated\LeaseDocument;
 use App\Models\ListingRelated\CommLotListing;
@@ -19,23 +19,30 @@ use App\Models\ListingRelated\CommLotListing;
 use App\Models\ListingRelated\WarehouseSpecs;
 
 
+use App\Models\ListingRelated\IndLotLeaseRates;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Models\ListingRelated\RetailOfficeListing;
 use App\Models\ListingRelated\WarehouseLeaseRates;
+use App\Models\ListingRelated\OfficeOtherDetailExtn;
+
 use App\Models\ListingRelated\LeaseTermsAndConditions;
 use App\Models\ListingRelated\IndLotTurnoverConditions;
-
+use App\Models\ListingRelated\OfficeTurnoverConditions;
 use App\Models\ListingRelated\CommLotTurnoverConditions;
 use App\Models\ListingRelated\WarehouseListingPropDetails;
 use App\Models\ListingRelated\WarehouseTurnoverConditions;
 use App\Models\ListingRelated\IndLotListingPropertyDetails;
+use App\Models\ListingRelated\OfficeListingPropertyDetails;
 use App\Models\ListingRelated\CommLotListingPropertyDetails;
-
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 use Database\Factories\ListingRelated\WarehouseListingFactory;
+use App\Models\ListingRelated\OfficeLeaseTermsAndConditionsExtn;
 use App\Models\ListingRelated\OtherDetailRelated\TenantUsePolicy;
 use App\Models\ListingRelated\OtherDetailRelated\AvailabilityInfo;
+use App\Models\ListingRelated\RetailOfficeBuildingSpecs;
+use App\Models\ListingRelated\RetailOfficeListingPropertyDetails;
+use App\Models\ListingRelated\RetailOfficeTurnoverConditions;
 
 class DatabaseSeeder extends Seeder
 {
@@ -58,33 +65,50 @@ class DatabaseSeeder extends Seeder
             ->state(['role' => 'agent'])
             ->create();
         //$agentaccounts = Account::where('role', 'agent')->get();
-        
+
 
 
         $indlots = IndLotListing::factory()
-            ->has(IndLotLeaseRates::factory()) 
-            ->has(IndLotListingPropertyDetails::factory()) 
-            ->has(IndLotTurnoverConditions::factory()) 
-            ->count(10) 
+            ->has(IndLotLeaseRates::factory())
+            ->has(IndLotListingPropertyDetails::factory())
+            ->has(IndLotTurnoverConditions::factory())
+            ->count(10)
             ->create();
 
         $warehouses = WarehouseListing::factory()
-            ->has(WarehouseTurnoverConditions::factory()) 
-            ->has(WarehouseListingPropDetails::factory()) 
-            ->has(WarehouseLeaseRates::factory()) 
+            ->has(WarehouseTurnoverConditions::factory())
+            ->has(WarehouseListingPropDetails::factory())
+            ->has(WarehouseLeaseRates::factory())
             ->has(WarehouseSpecs::factory())
-            ->count(10) 
+            ->count(10)
             ->create();
 
         $commlots = CommLotListing::factory()
-            ->has(CommLotTurnoverConditions::factory()) 
-            ->has(CommLotListingPropertyDetails::factory()) 
-            ->count(10) 
-            ->create(); 
-       
+            ->has(CommLotTurnoverConditions::factory())
+            ->has(CommLotListingPropertyDetails::factory())
+            ->count(10)
+            ->create();
 
-        $retails = RetailOfficeListing::factory()->count(10)->create();
-        $offices = OfficeSpaceListing::factory()->count(10)->create();
+
+        $retails = RetailOfficeListing::factory()
+            ->has(RetailOfficeListingPropertyDetails::factory())
+            ->has(RetailOfficeTurnoverConditions::factory())
+            ->has(RetailOfficeBuildingSpecs::factory())
+           // ->has(RetailOfficeOtherDetailExtn::factory())
+            
+            ->count(10)
+            ->create();
+
+        $offices = OfficeSpaceListing::factory()
+            ->has(OfficeSpecs::factory())
+            ->has(OfficeTurnoverConditions::factory())
+            ->has(OfficeListingPropertyDetails::factory())
+
+            // ->has(OfficeOtherDetailExtn::factory())
+            // ->has(OfficeLeaseTermsAndConditionsExtn::factory())
+
+            ->count(10)
+            ->create();
 
         $indlots->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
@@ -121,6 +145,34 @@ class DatabaseSeeder extends Seeder
             'custom_listable_id' => $item->custom_id
         ]));
 
+        // $offices->each(function ($office) use ($agentAccounts) {
+        //     // Create a corresponding Listing
+        //     $listing = Listing::factory()->create([
+        //         'listable_id' => $office->id,
+        //         'listable_type' => MorphHelper::getMorphAlias(OfficeSpaceListing::class),
+        //         'account_id' => $agentAccounts->random()->id,
+        //         'custom_listable_id' => $office->custom_id,
+        //     ]);
+
+        //     // Create a base LeaseTermsAndConditions for the listing
+        //     $leaseTerms = LeaseTermsAndConditions::factory()->create([
+        //         'listing_id' => $listing->id,
+        //     ]);
+
+        //     // Create the Office-specific extension using that leaseTerms and office
+        //     OfficeLeaseTermsAndConditionsExtn::factory()->create([
+        //         'lease_terms_and_conditions_id' => $leaseTerms->id,
+        //         'office_space_listing_id' => $office->id,
+        //     ]);
+
+        //     // Create the OfficeOtherDetailExtn separately
+        //     OfficeOtherDetailExtn::factory()->create([
+        //         'office_space_listing_id' => $office->id,
+        //     ]);
+        // });
+
+
+
         $contacts = Contact::factory()->count(15)->create();
 
         Listing::all()->each(function ($listing) use ($contacts) {
@@ -139,15 +191,15 @@ class DatabaseSeeder extends Seeder
             ->create();
 
         Listing::all()->each(function ($listing) use ($viewerAccounts) {
-        
-        $assignedViewers = $viewerAccounts->random(rand(1, 2));
-        foreach ($assignedViewers as $viewer) {
-            Inquiry::factory()->create([
-                'account_id' => $viewer->id,
-                'listing_id' => $listing->id,
-                'message' => fake()->sentence(),
-            ]);
-        }
+
+            $assignedViewers = $viewerAccounts->random(rand(1, 2));
+            foreach ($assignedViewers as $viewer) {
+                Inquiry::factory()->create([
+                    'account_id' => $viewer->id,
+                    'listing_id' => $listing->id,
+                    'message' => fake()->sentence(),
+                ]);
+            }
             // Attach an OtherDetail
             $otherDetail = OtherDetail::factory()->create([
                 'listing_id' => $listing->id,
@@ -175,11 +227,6 @@ class DatabaseSeeder extends Seeder
             Location::factory()->create([
                 'listing_id' => $listing->id,
             ]);
-
- 
         });
-
-
-
     }
 }
