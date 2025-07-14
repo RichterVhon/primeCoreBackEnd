@@ -23,8 +23,8 @@ class ListingController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $sortField = $request->input('sort', 'created_at'); 
-        $sortDirection = $request->input('direction', 'desc'); 
+        $sortField = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
 
         $query = Listing::query();
 
@@ -39,23 +39,28 @@ class ListingController extends Controller
         $listings = $query
             ->with(['account', 'listable', 'inquiries'])
             ->paginate(10)
-            ->appends($request->only([
-                'search',
-                'status',
-                //'category_id' 
-                // Add any query filters you want preserved
-            ]));
+            ->appends($request->query());
 
-return response()->json(['data' => $listings]);
+        return response()->json([
+            'data' => $listings->items(),
+            'meta' => [
+                'current_page' => $listings->currentPage(),
+                'per_page' => $listings->perPage(),
+                'total' => $listings->total(),
+                'last_page' => $listings->lastPage(),
+                'next_page_url' => $listings->nextPageUrl(),
+                'prev_page_url' => $listings->previousPageUrl()
+            ]
+        ]);
     }
 
     public function show($id): JsonResponse
     {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
-        return response()->json([
-            'message' => 'Forbidden: Agents or Admin only'
-        ], Response::HTTP_FORBIDDEN);
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
         }
 
         $listing = Listing::with([
@@ -64,12 +69,12 @@ return response()->json(['data' => $listings]);
             'leaseDocument',
             'otherDetail',
             'leaseTermsAndConditions',
-            'contacts', 
-            'inquiries', 
+            'contacts',
+            'inquiries',
             'listable',
         ])->findOrFail($id);
-        
-        
+
+
         /* alternative way
         switch (get_class($listable)) {
             case Warehouse::class:
@@ -84,9 +89,9 @@ return response()->json(['data' => $listings]);
         }
         */
 
-    $listable = $listing->listable;
+        $listable = $listing->listable;
         if ($listable instanceof WarehouseListing) {
-            $listable->load('indLotTurnoverConditions', 'indLotLeaseRates', 'indLotListingPropertyDetails');
+            $listable->load('warehouseListingPropDetails', 'warehouseTurnoverConditions', 'warehouseSpecs', 'warehouseLeaseRate');
         } elseif ($listable instanceof OfficeSpaceListing) {
             $listable->load('officeLeaseTermsAndConditionsExtn', 'officeTurnoverConditions', 'officeSpecs', 'OfficeOtherDetailExtn', 'OfficeListingPropertyDetails');
         } elseif ($listable instanceof CommLotListing) {
