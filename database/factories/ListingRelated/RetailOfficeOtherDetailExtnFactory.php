@@ -1,12 +1,13 @@
 <?php
 
 namespace Database\Factories\ListingRelated;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\RetailOfficeListing>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RetailOfficeOtherDetailExtn>
  */
-class RetailOfficeListingFactory extends Factory
+class RetailOfficeOtherDetailExtnFactory extends Factory
 {
     /**
      * Define the model's default state.
