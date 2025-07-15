@@ -18,7 +18,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
-    Route::post('/warehouselistings', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
+    Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
+    Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
 });
 
 // Group for warehouse-specific listings
