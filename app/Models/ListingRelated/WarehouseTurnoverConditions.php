@@ -10,7 +10,7 @@ class WarehouseTurnoverConditions extends Model
     use HasFactory;
     protected $fillable =[
         'warehouse_listing_id',
-        'flooring_turonver',
+        'flooring_turnover',
         'ceiling_turnover',
         'wall_turnover',
         'turnover_remarks',
