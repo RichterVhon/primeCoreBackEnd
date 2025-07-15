@@ -18,29 +18,32 @@ class OfficeSpaceListing extends Model
 
     protected $fillable = [
         'custom_id',
-    ]; 
+    ];
 
     public function customIdPrefix(): string
     {
         return 'OSP';
     }
 
-     public static function searchableFields(): array
+    public static function searchableFields(): array
     {
         return array_merge([
             'custom_id',
+            'OfficeSpecs.accreditation',
+            'OfficeSpecs.certification',
+            'OfficeTurnoverConditions.handover',
             // 'account.email',
             // 'category.name'
-        ], array_map(fn($field)=>"listing.$field", Listing::searchableFields()));
+        ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
 
     public static function filterableFields(): array
     {
         return array_merge([
-            'PEZA_accredited'
-        ], array_map(fn($field)=>"listing.$field", Listing::filterableFields()));
+            //
+        ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
-    
+
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {
@@ -48,27 +51,27 @@ class OfficeSpaceListing extends Model
     }
 
 
-    public function officeLeaseTermsAndConditionsExtn(): HasOne
+    public function OfficeLeaseTermsAndConditionsExtn(): HasOne
     {
         return $this->hasOne(OfficeLeaseTermsAndConditionsExtn::class, 'office_space_listing_id');
     }
 
-    public function officeTurnoverConditions(): HasOne
+    public function OfficeTurnoverConditions(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeTurnoverConditions::class, 'office_space_listing_id');
     }
 
-    public function officeSpecs(): HasOne
+    public function OfficeSpecs(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeSpecs::class, 'office_space_listing_id');
     }
 
-    public function officeOtherDetailExtn(): HasOne
+    public function OfficeOtherDetailExtn(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeOtherDetailExtn::class, 'office_space_listing_id');
     }
 
-    public function officeListingPropertyDetails(): HasOne
+    public function OfficeListingPropertyDetails(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeListingPropertyDetails::class, 'office_space_listing_id');
     }

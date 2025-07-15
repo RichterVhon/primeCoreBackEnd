@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ListingRelated\ListingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
+use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -19,6 +20,12 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
 Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
     Route::get('/', [WarehouseListingController::class, 'index']);
     Route::get('/{id}', [WarehouseListingController::class, 'show']);
+});
+
+// Group for office-specific listings
+Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
+    Route::get('/', [OfficeSpaceListingController::class, 'index']);
+    Route::get('/{id}', [OfficeSpaceListingController::class, 'show']);
 });
 
 
