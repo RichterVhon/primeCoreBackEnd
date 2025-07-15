@@ -25,7 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         '/logout',
         '/register',
         '/listings/warehouse',
-        '/warehouselistings'
+        '/warehouselistings',
+        '/listings/officespace',
+        '/officespacelistings',
         // add other routes as needed
     ]);
 

@@ -6,7 +6,9 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ListingRelated\IndLotListingController;
 use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
+use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
+
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
@@ -42,6 +44,12 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
 Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
+});
+
+// Group for office-specific listings
+Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
+    Route::get('/', [OfficeSpaceListingController::class, 'index']);
+    Route::get('/{id}', [OfficeSpaceListingController::class, 'show']);
 });
 
 
