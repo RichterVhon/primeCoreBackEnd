@@ -5,6 +5,7 @@ namespace Database\Factories\ListingRelated;
 use App\Enums\Pylonavailability;
 use App\Models\ListingRelated\RetailOfficeListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\RetailOfficeOtherDetailExtn>
@@ -23,6 +24,7 @@ class RetailOfficeOtherDetailExtnFactory extends Factory
             'total_floor_count' => $this -> faker -> numberBetween(5,10),
             'other_remarks' => $this -> faker -> sentence(),
             'retail_office_listing_id' => RetailOfficeListing::factory(),
+            'other_detail_id' => OtherDetail::factory(),
         ];
     }
 }

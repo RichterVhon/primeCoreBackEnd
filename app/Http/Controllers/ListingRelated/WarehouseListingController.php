@@ -15,18 +15,19 @@ use App\Traits\HandlesListingCreation;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Http\Requests\StoreWarehouseListingRequest;
+use App\Http\Requests\UpdateWarehouseListingRequest;
 
 class WarehouseListingController extends Controller
 {
     public function index(Request $request): JsonResponse
-    {   
+    {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
             return response()->json([
                 'message' => 'Forbidden: Agents or Admin only'
             ], Response::HTTP_FORBIDDEN);
         }
-        
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -141,5 +142,59 @@ class WarehouseListingController extends Controller
             'data' => $fullWarehouse
         ], 201);
     }
+
+
+    public function update(UpdateWarehouseListingRequest $request, $id): JsonResponse
+    {
+        $warehouse = WarehouseListing::with([
+            'listing',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($warehouse, $data) {
+            // 🧱 Update warehouse morph record
+            $warehouse->update([
+                'peza_accredited' => $data['peza_accredited'] ?? $warehouse->peza_accredited,
+            ]);
+
+            // 🧍 Update shared listing fields
+            $this->updateListing($warehouse->listing, $data['listing'] ?? []);
+
+            // 🔄 Update listing components
+            $this->updateListingComponents($warehouse->listing, $data['listing'] ?? []);
+
+            // ⚙️ Update warehouse components
+            $warehouse->warehouseListingPropDetails()->update($data['warehouse_listing_prop_details'] ?? []);
+            $warehouse->warehouseTurnoverConditions()->update($data['warehouse_turnover_conditions'] ?? []);
+            $warehouse->warehouseSpecs()->update($data['warehouse_specs'] ?? []);
+            $warehouse->warehouseLeaseRate()->update($data['warehouse_lease_rates'] ?? []);
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = WarehouseListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($warehouse->id);
+
+        return response()->json([
+            'message' => 'Warehouse listing successfully updated.',
+            'data' => $updated
+        ], 201);
+    }
+
 }
 

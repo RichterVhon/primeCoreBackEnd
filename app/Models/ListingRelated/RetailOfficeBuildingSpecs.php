@@ -63,7 +63,7 @@ class RetailOfficeBuildingSpecs extends Model
         'floor_to_ceiling_height' => 'float',         
         'floor_to_floor_height' => 'float',
         'mezzanine' => 'float',
-        'retail_office_listing_id' => RetailOfficeListing::class,
+        //'retail_office_listing_id' => RetailOfficeListing::class,
     ];
 
     public function retailOfficeListing(): BelongsTo
