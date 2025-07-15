@@ -12,7 +12,7 @@ use App\Models\ListingRelated\OfficeOtherDetailExtn;
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OfficeOtherDetailExtn>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\OfficeOtherDetailExtn>
  */
 class OfficeOtherDetailExtnFactory extends Factory
 {
@@ -25,11 +25,7 @@ class OfficeOtherDetailExtnFactory extends Factory
      */
     public function definition(): array
     {
-
-        $otherDetail = OtherDetail::factory()->create();
-
         return [
-        'other_detail_id' => $otherDetail->id,
         'a/c_unit' => $this->faker->randomElement(AcUnitType::cases()),
         'a/c_type' => $this->faker->randomElement(['Split-Type','Floor Mounted', 'Window AC']),
         'a/c_rate' => $this->faker->randomFloat(2, 100, 500),
@@ -46,9 +42,8 @@ class OfficeOtherDetailExtnFactory extends Factory
         'year_built' => $this->faker->year(),
         'total_floor_count' => $this->faker->numberBetween(1, 50),
         'other_remarks' => $this->faker->paragraph(),
-        'electric_meter' => $otherDetail->electricity_meter->value,
-        'water_meter' => $otherDetail->water_meter-> values,
         'office_space_listing_id' => OfficeSpaceListing::factory(),
+        'other_detail_id' => OtherDetail::factory(),
         ];
     }
 }

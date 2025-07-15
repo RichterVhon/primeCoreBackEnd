@@ -2,10 +2,13 @@
 
 namespace Database\Factories\ListingRelated;
 
+use App\Enums\Pylonavailability;
+use App\Models\ListingRelated\RetailOfficeListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RetailOfficeOtherDetailExtn>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\RetailOfficeOtherDetailExtn>
  */
 class RetailOfficeOtherDetailExtnFactory extends Factory
 {
@@ -17,7 +20,11 @@ class RetailOfficeOtherDetailExtnFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'pylon_availability' => $this -> faker -> randomElement(Pylonavailability::cases()), // can be enum later on in the project
+            'total_floor_count' => $this -> faker -> numberBetween(5,10),
+            'other_remarks' => $this -> faker -> sentence(),
+            'retail_office_listing_id' => RetailOfficeListing::factory(),
+            'other_detail_id' => OtherDetail::factory(),
         ];
     }
 }

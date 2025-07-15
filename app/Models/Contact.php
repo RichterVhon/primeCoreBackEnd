@@ -28,4 +28,13 @@ class Contact extends Model
             ->withTimestamps()
             ->withPivot('company');
     }
+
+    public function accounts(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Account::class)
+            ->using(\App\Models\AccountContact::class)
+            ->withPivot('company_name') //, 'relationship_type')
+            ->withTimestamps();
+
+    }
 }
