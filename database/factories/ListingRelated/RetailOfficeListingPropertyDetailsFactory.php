@@ -6,7 +6,7 @@ use App\Models\ListingRelated\RetailOfficeListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RetailOfficeListingPropertyDetails>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\RetailOfficeListingPropertyDetails>
  */
 class RetailOfficeListingPropertyDetailsFactory extends Factory
 {

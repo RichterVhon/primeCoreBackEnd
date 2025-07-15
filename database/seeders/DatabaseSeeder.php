@@ -92,22 +92,20 @@ class DatabaseSeeder extends Seeder
 
 
         $retails = RetailOfficeListing::factory()
-            //->has(RetailOfficeListingPropertyDetails::factory())
-            //->has(RetailOfficeTurnoverConditions::factory())
-            //->has(RetailOfficeBuildingSpecs::factory())
-            // ->has(RetailOfficeOtherDetailExtn::factory())
-
+            ->has(RetailOfficeListingPropertyDetails::factory())
+            ->has(RetailOfficeTurnoverConditions::factory())
+            ->has(RetailOfficeBuildingSpecs::factory())
+            //->has(RetailOfficeOtherDetailExtn::factory())            
             ->count(10)
             ->create();
 
         $offices = OfficeSpaceListing::factory()
             ->has(OfficeSpecs::factory())
-            ->has(OfficeTurnoverConditions::factory())
-            ->has(OfficeListingPropertyDetails::factory())
-            // ->has(OfficeLeaseTermsAndConditionsExtn::factory()) 
-            // ->has(OfficeOtherDetailExtn::factory())
-
-            ->count(10)
+            ->has(OfficeTurnoverConditions::factory()) 
+            ->has(OfficeListingPropertyDetails::factory()) 
+            //->has(OfficeLeaseTermsAndConditionsExtn::factory()) 
+            //->has(OfficeOtherDetailExtn::factory())
+            ->count(10) 
             ->create();
 
         $indlots->each(fn($item) => Listing::factory()->create([
@@ -210,5 +208,33 @@ class DatabaseSeeder extends Seeder
                 'listing_id' => $listing->id,
             ]);
         });
+
+        Listing::with(['otherDetail', 'leaseTermsAndConditions'])->get()->each(function ($listing) {        // ✅ Get existing OtherDetail already linked to this listing
+        $otherDetail = $listing->otherDetail;
+        $leaseTerms = $listing->leaseTermsAndConditions;
+        // 🎯 Attach extension only if the listable is RetailOffice
+        if ($listing->listable_type === "Retail Office") {
+            if($otherDetail){
+                RetailOfficeOtherDetailExtn::factory()->create([
+                    'other_detail_id' => $otherDetail->id,
+                    'retail_office_listing_id' => $listing->listable_id,
+                ]);
+            }
+        }
+        else if ($listing->listable_type === "Office Space") {
+            if($otherDetail){
+                OfficeOtherDetailExtn::factory()->create([
+                    'other_detail_id' => $otherDetail->id,
+                    'office_space_listing_id' => $listing->listable_id,
+                ]);
+            }
+            if($leaseTerms){
+                OfficeLeaseTermsAndConditionsExtn::factory()->create([
+                    'lease_terms_and_conditions_id' => $leaseTerms->id,
+                    'office_space_listing_id' => $listing->listable_id,
+                ]);
+            }
+        }
+    });
     }
 }

@@ -16,6 +16,8 @@ class RetailOfficeOtherDetailExtn extends Model
     use HasSearch;
     
     protected $fillable = [
+        'retail_office_listing_id',
+        'other_detail_id',
         'pylon_availability',
         'total_floor_count',
         'other_remarks',
