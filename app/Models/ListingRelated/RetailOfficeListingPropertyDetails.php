@@ -20,7 +20,7 @@ class RetailOfficeListingPropertyDetails extends Model
 
     protected $casts =[
         'leasable_size' => 'float',
-        'retail_office_listing_id'=> RetailOfficeListing::class,
+        //'retail_office_listing_id'=> RetailOfficeListing::class,
     ];
 
     // Define any relationships if needed
