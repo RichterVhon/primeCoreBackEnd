@@ -2,16 +2,27 @@
 
 namespace App\Models\ListingRelated;
 
+use App\Enums\HandoverType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfficeTurnoverConditions extends Model
 {
+    use HasFactory;
+    
     protected $fillable = [
-        'handover', //make enum later on in the project
+        'handover', //enum
         'ceiling',
+        'floor',
         'wall',
-        'turnover_remarks'
+        'turnover_remarks',
+        'office_space_listing_id',
+    ];
+
+    protected $casts = [
+        'handover' => HandoverType::class
+
     ];
 
     public function officeSpaceListing(): BelongsTo

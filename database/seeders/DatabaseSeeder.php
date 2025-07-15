@@ -9,9 +9,9 @@ use App\Models\Contact;
 use App\Models\Inquiry;
 use App\Support\MorphHelper;
 use Illuminate\Database\Seeder;
-use App\Models\ListingRelated\IndLotLeaseRates;
 use App\Models\ListingRelated\Listing;
 use App\Models\ListingRelated\Location;
+use App\Models\ListingRelated\OfficeSpecs;
 use App\Models\ListingRelated\IndLotListing;
 use App\Models\ListingRelated\LeaseDocument;
 use App\Models\ListingRelated\CommLotListing;
@@ -19,22 +19,30 @@ use App\Models\ListingRelated\CommLotListing;
 use App\Models\ListingRelated\WarehouseSpecs;
 
 
+use App\Models\ListingRelated\IndLotLeaseRates;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Models\ListingRelated\RetailOfficeListing;
 use App\Models\ListingRelated\WarehouseLeaseRates;
+use App\Models\ListingRelated\OfficeOtherDetailExtn;
+
 use App\Models\ListingRelated\LeaseTermsAndConditions;
 use App\Models\ListingRelated\IndLotTurnoverConditions;
-
+use App\Models\ListingRelated\OfficeTurnoverConditions;
 use App\Models\ListingRelated\CommLotTurnoverConditions;
+use App\Models\ListingRelated\RetailOfficeBuildingSpecs;
+use App\Models\ListingRelated\RetailOfficeOtherDetailExtn;
 use App\Models\ListingRelated\WarehouseListingPropDetails;
 use App\Models\ListingRelated\WarehouseTurnoverConditions;
 use App\Models\ListingRelated\IndLotListingPropertyDetails;
+use App\Models\ListingRelated\OfficeListingPropertyDetails;
 use App\Models\ListingRelated\CommLotListingPropertyDetails;
-
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
+use App\Models\ListingRelated\RetailOfficeTurnoverConditions;
 use Database\Factories\ListingRelated\WarehouseListingFactory;
+use App\Models\ListingRelated\OfficeLeaseTermsAndConditionsExtn;
 use App\Models\ListingRelated\OtherDetailRelated\TenantUsePolicy;
+use App\Models\ListingRelated\RetailOfficeListingPropertyDetails;
 use App\Models\ListingRelated\OtherDetailRelated\AvailabilityInfo;
 
 class DatabaseSeeder extends Seeder
@@ -83,8 +91,24 @@ class DatabaseSeeder extends Seeder
             ->create(); 
        
 
-        $retails = RetailOfficeListing::factory()->count(10)->create();
-        $offices = OfficeSpaceListing::factory()->count(10)->create();
+        $retails = RetailOfficeListing::factory()
+            //->has(RetailOfficeListingPropertyDetails::factory())
+            //->has(RetailOfficeTurnoverConditions::factory())
+            //->has(RetailOfficeBuildingSpecs::factory())
+            // ->has(RetailOfficeOtherDetailExtn::factory())
+            
+            ->count(10)
+            ->create();
+
+        $offices = OfficeSpaceListing::factory()
+            ->has(OfficeSpecs::factory())
+            ->has(OfficeTurnoverConditions::factory()) 
+            ->has(OfficeListingPropertyDetails::factory()) 
+            // ->has(OfficeLeaseTermsAndConditionsExtn::factory()) 
+            // ->has(OfficeOtherDetailExtn::factory())
+            
+            ->count(10) 
+            ->create();
 
         $indlots->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
