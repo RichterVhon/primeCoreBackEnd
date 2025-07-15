@@ -3,6 +3,7 @@
 namespace App\Models\ListingRelated;
 
 use App\Traits\HasCustomId;
+use App\Traits\HasSearch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -13,6 +14,8 @@ class RetailOfficeListing extends Model
 {
     use HasFactory;
     use HasCustomId;
+    use HasSearch;
+    
     protected $fillable = [
         'custom_id',
     ]; 
@@ -20,6 +23,22 @@ class RetailOfficeListing extends Model
     public function customIdPrefix(): string
     {
         return 'RSP';
+    }
+
+     public static function searchableFields(): array
+    {
+        return array_merge([
+            'custom_id',
+            // 'account.email',
+            // 'category.name'
+        ], array_map(fn($field)=>"listing.$field", Listing::searchableFields()));
+    }
+
+    public static function filterableFields(): array
+    {
+        return array_merge([
+            //'PEZA_accredited'
+        ], array_map(fn($field)=>"listing.$field", Listing::filterableFields()));
     }
     
     //para maging morph target ng Listing model
@@ -43,5 +62,8 @@ class RetailOfficeListing extends Model
         return $this->hasOne(\App\Models\ListingRelated\RetailOfficeBuildingSpecs::class, 'retail_office_listing_id');
     }
 
+    public function retailOfficeOtherDetailExtn(): HasOne{
+        return $this->hasOne(\App\Models\ListingRelated\RetailOfficeOtherDetailExtn::class, 'retail_office_listing_id');
+    }
     
 }

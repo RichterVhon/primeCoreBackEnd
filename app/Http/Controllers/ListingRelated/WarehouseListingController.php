@@ -2,19 +2,30 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ListingRelated\Listing;
+
+use Symfony\Component\HttpFoundation\Response;
+
 use App\Models\ListingRelated\WarehouseListing;
 use App\Http\Requests\StoreWarehouseListingRequest;
 
 class WarehouseListingController extends Controller
 {
     public function index(Request $request): JsonResponse
-    {
+    {   
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+        
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -81,6 +92,7 @@ class WarehouseListingController extends Controller
         return response()->json(['data' => $warehouse]);
     }
 
+
     public function store(StoreWarehouseListingRequest $request)
     {
         DB::transaction(function () use ($request) {
@@ -128,3 +140,4 @@ class WarehouseListingController extends Controller
 
 
 }
+
