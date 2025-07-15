@@ -66,30 +66,30 @@ class DatabaseSeeder extends Seeder
             ->state(['role' => 'agent'])
             ->create();
         //$agentaccounts = Account::where('role', 'agent')->get();
-        
+
 
 
         $indlots = IndLotListing::factory()
-            ->has(IndLotLeaseRates::factory()) 
-            ->has(IndLotListingPropertyDetails::factory()) 
-            ->has(IndLotTurnoverConditions::factory()) 
-            ->count(10) 
+            ->has(IndLotLeaseRates::factory())
+            ->has(IndLotListingPropertyDetails::factory())
+            ->has(IndLotTurnoverConditions::factory())
+            ->count(10)
             ->create();
 
         $warehouses = WarehouseListing::factory()
-            ->has(WarehouseTurnoverConditions::factory()) 
-            ->has(WarehouseListingPropDetails::factory()) 
-            ->has(WarehouseLeaseRates::factory()) 
+            ->has(WarehouseTurnoverConditions::factory())
+            ->has(WarehouseListingPropDetails::factory())
+            ->has(WarehouseLeaseRates::factory())
             ->has(WarehouseSpecs::factory())
-            ->count(10) 
+            ->count(10)
             ->create();
 
         $commlots = CommLotListing::factory()
-            ->has(CommLotTurnoverConditions::factory()) 
-            ->has(CommLotListingPropertyDetails::factory()) 
-            ->count(10) 
-            ->create(); 
-       
+            ->has(CommLotTurnoverConditions::factory())
+            ->has(CommLotListingPropertyDetails::factory())
+            ->count(10)
+            ->create();
+
 
         $retails = RetailOfficeListing::factory()
             ->has(RetailOfficeListingPropertyDetails::factory())
@@ -117,7 +117,7 @@ class DatabaseSeeder extends Seeder
 
         $warehouses->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
-             'listable_type' => MorphHelper::getMorphAlias(WarehouseListing::class),
+            'listable_type' => MorphHelper::getMorphAlias(WarehouseListing::class),
             'account_id' => $agentAccounts->random()->id,
             'custom_listable_id' => $item->custom_id
         ]));
@@ -145,6 +145,16 @@ class DatabaseSeeder extends Seeder
 
         $contacts = Contact::factory()->count(15)->create();
 
+
+        // Attach contacts to accounts with pivot data
+        $agentAccounts->each(function ($agentAccounts) use ($contacts) {
+            $agentAccounts->contacts()->attach(
+                $contacts->random(rand(2, 5))->pluck('id')->toArray(),
+                ['company_name' => fake()->company()] // 'relationship_type' => 'client']
+            );
+        });
+
+
         Listing::all()->each(function ($listing) use ($contacts) {
             $assignedContacts = $contacts->random(rand(1, 2));
 
@@ -161,15 +171,15 @@ class DatabaseSeeder extends Seeder
             ->create();
 
         Listing::all()->each(function ($listing) use ($viewerAccounts) {
-        
-        $assignedViewers = $viewerAccounts->random(rand(1, 2));
-        foreach ($assignedViewers as $viewer) {
-            Inquiry::factory()->create([
-                'account_id' => $viewer->id,
-                'listing_id' => $listing->id,
-                'message' => fake()->sentence(),
-            ]);
-        }
+
+            $assignedViewers = $viewerAccounts->random(rand(1, 2));
+            foreach ($assignedViewers as $viewer) {
+                Inquiry::factory()->create([
+                    'account_id' => $viewer->id,
+                    'listing_id' => $listing->id,
+                    'message' => fake()->sentence(),
+                ]);
+            }
             // Attach an OtherDetail
             $otherDetail = OtherDetail::factory()->create([
                 'listing_id' => $listing->id,
@@ -226,6 +236,5 @@ class DatabaseSeeder extends Seeder
             }
         }
     });
-
     }
 }
