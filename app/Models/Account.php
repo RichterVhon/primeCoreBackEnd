@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Account extends Authenticatable
 {
@@ -17,7 +18,9 @@ class Account extends Authenticatable
         'email',
         'password',
         'role', // can be enum later on in the project
-        'status'
+        'status',
+        //'company name',
+
     ];
 
     protected $casts = [
@@ -34,5 +37,13 @@ class Account extends Authenticatable
     public function inquiries(): HasMany
     {
         return $this->hasMany(\App\Models\Inquiry::class);
+    }
+
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Contact::class)
+            ->using(\App\Models\AccountContact::class)
+            ->withPivot('company_name') //, 'relationship_type')
+            ->withTimestamps();
     }
 }
