@@ -13,7 +13,7 @@ use App\Enums\Meter;
 trait HasListingValidationRules
 {
     public function listingRules(): array
-    {
+    {  
         return [
             // 🧍 Core Listing
             'listing.status' => ['required', new Enum(ListingStatus::class)],

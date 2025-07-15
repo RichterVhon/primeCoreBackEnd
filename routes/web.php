@@ -17,6 +17,8 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store')->middleware('can:create,App\Models\ListingRelated\Listing');
+    Route::post('/indlot', [IndLotListingController::class, 'store'])->name('listings.indlot.store')->middleware('can:create,App\Models\ListingRelated\Listing');
+
 });
 
 // Group for warehouse-specific listings
@@ -30,6 +32,8 @@ Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
 Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [IndLotListingController::class, 'index']);
     Route::get('/{id}', [IndLotListingController::class, 'show']);
+    Route::post('/', [IndLotListingController::class, 'store'])->name('indlot.store');
+
 });
 
 //Group for CommLot-specific listings
