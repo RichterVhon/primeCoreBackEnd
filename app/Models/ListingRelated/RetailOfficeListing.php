@@ -65,6 +65,5 @@ class RetailOfficeListing extends Model
     public function retailOfficeOtherDetailExtn(): HasOne{
         return $this->hasOne(\App\Models\ListingRelated\RetailOfficeOtherDetailExtn::class, 'retail_office_listing_id');
     }
-
     
 }
