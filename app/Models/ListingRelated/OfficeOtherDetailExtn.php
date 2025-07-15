@@ -15,6 +15,7 @@ class OfficeOtherDetailExtn extends Model
     use HasFactory;
 
     protected $fillable= [
+        'office_space_listing_id',
         'a/c_unit',
         'a/c_type',
         'a/c_rate',
@@ -28,12 +29,11 @@ class OfficeOtherDetailExtn extends Model
         'private_toilet',
         'common_toilet',
         'tenant_restrictions',
-        'electricity_meter',
-        'water_meter',
+        //'electricity_meter',
+        //'water_meter',
         'year_built',
         'total_floor_count',
         'other_remarks',
-        'office_space_listing_id',
     ];
 
     protected $casts = [
