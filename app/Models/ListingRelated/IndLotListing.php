@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class IndLotListing extends Model
-{
+{   
     use HasFactory;
     use HasCustomId;
     use HasSearch;

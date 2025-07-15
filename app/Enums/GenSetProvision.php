@@ -9,3 +9,4 @@ enum GenSetProvision: string
     case WITH_EXISTING = 'with existing';
     case NOT_APPLICABLE = 'not applicable';
 }
+
