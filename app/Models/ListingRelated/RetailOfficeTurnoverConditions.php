@@ -19,7 +19,7 @@ class RetailOfficeTurnoverConditions extends Model
     protected $casts = [
         'turnover_remarks' => 'string',
         'frontage_turnover' => 'float',
-        'retail_office_listing_id' => RetailOfficeListing::class,
+        //'retail_office_listing_id' => RetailOfficeListing::class,
     ];
 
     public function retailOfficeListing(): BelongsTo
