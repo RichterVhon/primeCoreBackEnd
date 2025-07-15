@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OfficeOtherDetailExtn extends Model
 {
     use HasFactory;
-
-    protected $fillable= [
+    protected $table = 'office_other_details_extn';
+protected $fillable= [
         'office_space_listing_id',
+        'other_detail_id',
         'a/c_unit',
         'a/c_type',
         'a/c_rate',

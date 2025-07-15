@@ -18,6 +18,7 @@ class OfficeLeaseTermsAndConditionsExtn extends Model
         'parking_rate_slot',
         'parking_allotment',
         'office_space_listing_id',
+        'lease_terms_and_conditions_id',
     ];
 
     protected $casts = [
@@ -25,16 +26,15 @@ class OfficeLeaseTermsAndConditionsExtn extends Model
         'cusa_on_parking' => 'float',
         'parking_rate_slot' => 'float',
         'parking_allotment' => 'integer',
-        'office_space_listing_id' => OfficeSpaceListing::class,
     ];
 
     public function officeSpaceListing(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\ListingRelated\OfficeSpaceListing::class, 'office_space_listing_id');
+        return $this->belongsTo(\App\Models\ListingRelated\OfficeSpaceListing::class);
     }
 
     public function leaseTermsAndConditions(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\ListingRelated\LeaseTermsAndConditions::class, 'office_space_listing_id');
+        return $this->belongsTo(\App\Models\ListingRelated\LeaseTermsAndConditions::class);
     }
 }
