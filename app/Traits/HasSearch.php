@@ -22,14 +22,25 @@ trait HasSearch
         });
     }
 
-    public function scopeApplyFilters(Builder $query, array $filters): Builder
-    {
-        foreach ($filters as $key => $value) {
-            if (!is_null($value)) {
-                $query->where($key, $value);
+public function scopeApplyFilters(Builder $query, array $filters): Builder
+{
+    foreach ($filters as $key => $value) {
+        if (!is_null($value)) {
+            if (str_contains($key, '.')) {
+                $segments = explode('.', $key);
+                $field = array_pop($segments); // Get the column name
+                $relation = implode('.', $segments); // Rebuild the relationship path
+
+                $query->whereHas($relation, function ($q) use ($field, $value) {
+                    $q->where($field, '=', $value);
+                });
+            } else {
+                $query->where($key, '=', $value);
             }
         }
-
-        return $query;
     }
+
+    return $query;
+}
+
 }

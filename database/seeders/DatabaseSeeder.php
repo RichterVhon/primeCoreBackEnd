@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
 
         $warehouses->each(fn($item) => Listing::factory()->create([
             'listable_id' => $item->id,
-            'listable_type' => MorphHelper::getMorphAlias(WarehouseListing::class),
+             'listable_type' => MorphHelper::getMorphAlias(WarehouseListing::class),
             'account_id' => $agentAccounts->random()->id,
             'custom_listable_id' => $item->custom_id
         ]));
