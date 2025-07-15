@@ -5,7 +5,7 @@ namespace Database\Factories\ListingRelated;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RetailOfficeOtherDetailExtn>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\RetailOfficeOtherDetailExtn>
  */
 class RetailOfficeOtherDetailExtnFactory extends Factory
 {

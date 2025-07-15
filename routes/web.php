@@ -16,7 +16,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
-    Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store')->middleware('can:create,App\Models\ListingRelated\Listing');
+    Route::post('/warehouselistings', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
 });
 
 // Group for warehouse-specific listings
@@ -43,6 +43,7 @@ Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
 });
+
 
 
 require __DIR__.'/auth.php';
