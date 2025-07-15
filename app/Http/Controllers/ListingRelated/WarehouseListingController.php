@@ -10,8 +10,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ListingRelated\Listing;
 
-use Symfony\Component\HttpFoundation\Response;
+use App\Traits\HandlesListingCreation;
 
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Http\Requests\StoreWarehouseListingRequest;
 
@@ -93,51 +94,52 @@ class WarehouseListingController extends Controller
     }
 
 
-    public function store(StoreWarehouseListingRequest $request)
+    use HandlesListingCreation;
+
+    public function store(StoreWarehouseListingRequest $request): JsonResponse
     {
-        DB::transaction(function () use ($request) {
+        $warehouse = DB::transaction(function () use ($request) {
             $data = $request->validated();
-            
-            // Step 1: Morph target — create WarehouseListing
+
+            // Create warehouse morph target
             $warehouse = WarehouseListing::create([
                 'peza_accredited' => $data['peza_accredited']
             ]);
 
-            // Step 2: Create Listing + associate morph
-            $listingData = $data['listing'];
-            $user = Auth::user();
-            $listingData['account_id'] = $user->id;
+            // Create listing + attach morph
+            $listing = $this->createListing($data['listing'], $warehouse);
 
-            $listingData['date_uploaded'] = now();
-            $listingData['date_last_updated'] = now();
-            
-            $listing = new Listing($listingData);
-            $listing->listable()->associate($warehouse);
-            $listing->save();
+            // 📎 Add nested listing components
+            $this->createListingComponents($listing, $data['listing']);
 
-            // Step 3: Create Listing Components
-            $listing->location()->create($data['listing']['location'] ?? []);
-            $listing->leaseDocument()->create($data['listing']['lease_document'] ?? []);
-            $listing->leaseTermsAndConditions()->create($data['listing']['lease_terms_and_conditions'] ?? []);
-            $listing->otherDetail()->create($data['listing']['other_detail'] ?? []);
-
-            // Step 4: Attach Contacts via pivot
-            foreach ($data['listing']['contacts'] ?? [] as $contact) {
-                $listing->contacts()->attach($contact['contact_id'], [
-                    'company' => $contact['company'] ?? null,
-                ]);
-            }
-
-            // Step 5: Create Warehouse Components
+            // Add warehouse-specific components
             $warehouse->warehouseListingPropDetails()->create($data['warehouse_listing_prop_details'] ?? []);
             $warehouse->warehouseTurnoverConditions()->create($data['warehouse_turnover_conditions'] ?? []);
             $warehouse->warehouseSpecs()->create($data['warehouse_specs'] ?? []);
             $warehouse->warehouseLeaseRate()->create($data['warehouse_lease_rates'] ?? []);
+
+            return $warehouse;
         });
 
-        return response()->json(['message' => 'Warehouse listing successfully created with all components'], 201);
+        // ⏪ Fetch inserted data with full relationships
+        $fullWarehouse = WarehouseListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($warehouse->id);
+
+        return response()->json([
+            'message' => 'Warehouse listing successfully created with all components.',
+            'data' => $fullWarehouse
+        ], 201);
     }
-
-
 }
 
