@@ -12,7 +12,7 @@ use App\Models\ListingRelated\OfficeOtherDetailExtn;
 use App\Models\ListingRelated\OtherDetailRelated\OtherDetail;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OfficeOtherDetailExtn>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\OfficeOtherDetailExtn>
  */
 class OfficeOtherDetailExtnFactory extends Factory
 {

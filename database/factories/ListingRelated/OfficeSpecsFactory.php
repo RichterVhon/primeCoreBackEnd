@@ -7,7 +7,7 @@ use App\Models\ListingRelated\OfficeSpaceListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OfficeSpecs>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\OfficeSpecs>
  */
 class OfficeSpecsFactory extends Factory
 {

@@ -7,7 +7,7 @@ use App\Models\ListingRelated\OfficeSpaceListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OfficeTurnoverConditions>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ListingRelated\OfficeTurnoverConditions>
  */
 class OfficeTurnoverConditionsFactory extends Factory
 {
