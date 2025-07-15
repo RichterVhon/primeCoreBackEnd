@@ -12,7 +12,6 @@ use App\Traits\HasSearch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class WarehouseListing extends Model
@@ -23,10 +22,10 @@ class WarehouseListing extends Model
 
     protected $fillable = [
         'custom_id',
-        'PEZA_accredited',
+        'peza_accredited',
     ];
     protected $casts = [
-        'PEZA_accredited' => AccreditationType::class,
+        'peza_accredited' => AccreditationType::class,
     ];
 
     public function customIdPrefix(): string
@@ -46,7 +45,7 @@ class WarehouseListing extends Model
     public static function filterableFields(): array
     {
         return array_merge([
-            'PEZA_accredited'
+            'peza_accredited'
         ], array_map(fn($field)=>"listing.$field", Listing::filterableFields()));
     }
 

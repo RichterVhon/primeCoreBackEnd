@@ -2,15 +2,31 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\ListingRelated\Listing;
+
+use App\Traits\HandlesListingCreation;
+
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\WarehouseListing;
+use App\Http\Requests\StoreWarehouseListingRequest;
 
 class WarehouseListingController extends Controller
 {
     public function index(Request $request): JsonResponse
-    {
+    {   
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+        
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -76,4 +92,54 @@ class WarehouseListingController extends Controller
 
         return response()->json(['data' => $warehouse]);
     }
+
+
+    use HandlesListingCreation;
+
+    public function store(StoreWarehouseListingRequest $request): JsonResponse
+    {
+        $warehouse = DB::transaction(function () use ($request) {
+            $data = $request->validated();
+
+            // Create warehouse morph target
+            $warehouse = WarehouseListing::create([
+                'peza_accredited' => $data['peza_accredited']
+            ]);
+
+            // Create listing + attach morph
+            $listing = $this->createListing($data['listing'], $warehouse);
+
+            // 📎 Add nested listing components
+            $this->createListingComponents($listing, $data['listing']);
+
+            // Add warehouse-specific components
+            $warehouse->warehouseListingPropDetails()->create($data['warehouse_listing_prop_details'] ?? []);
+            $warehouse->warehouseTurnoverConditions()->create($data['warehouse_turnover_conditions'] ?? []);
+            $warehouse->warehouseSpecs()->create($data['warehouse_specs'] ?? []);
+            $warehouse->warehouseLeaseRate()->create($data['warehouse_lease_rates'] ?? []);
+
+            return $warehouse;
+        });
+
+        // ⏪ Fetch inserted data with full relationships
+        $fullWarehouse = WarehouseListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($warehouse->id);
+
+        return response()->json([
+            'message' => 'Warehouse listing successfully created with all components.',
+            'data' => $fullWarehouse
+        ], 201);
+    }
 }
+
