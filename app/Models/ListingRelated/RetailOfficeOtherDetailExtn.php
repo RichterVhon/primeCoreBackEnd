@@ -28,7 +28,7 @@ class RetailOfficeOtherDetailExtn extends Model
         'pylon_availability' => Pylonavailability::class, // can be enum later on in the project
         'total_floor_count' => 'integer',
         'other_remarks' => 'string',
-        'retail_office_listing_id' => RetailOfficeListing::class,
+        //'retail_office_listing_id' => RetailOfficeListing::class,
     ];
 
     public function retailOfficeListing(): BelongsTo
