@@ -22,10 +22,10 @@ class WarehouseListing extends Model
 
     protected $fillable = [
         'custom_id',
-        'peza_accredited',
+        'PEZA_accredited',
     ];
     protected $casts = [
-        'peza_accredited' => AccreditationType::class,
+        'PEZA_accredited' => AccreditationType::class,
     ];
 
     public function customIdPrefix(): string
@@ -45,7 +45,7 @@ class WarehouseListing extends Model
     public static function filterableFields(): array
     {
         return array_merge([
-            'peza_accredited'
+            'PEZA_accredited'
         ], array_map(fn($field)=>"listing.$field", Listing::filterableFields()));
     }
 

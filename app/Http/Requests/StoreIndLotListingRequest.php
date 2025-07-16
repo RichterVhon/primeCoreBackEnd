@@ -34,7 +34,7 @@ class StoreIndLotListingRequest extends FormRequest
     return array_merge(
         $this->listingRules(), // Assuming this includes base rules for ind_lot_listings
         [
-            'peza_accredited' => ['required', new Enum(AccreditationType::class)],
+            'PEZA_accredited' => ['required', new Enum(AccreditationType::class)],
             // 🧱 ind_lot_listing_property_details table
             'ind_lot_listing_property_details.lot_area' => 'nullable|numeric',
             'ind_lot_listing_property_details.lot_shape' => ['nullable', new Enum(LotShape::class)],
