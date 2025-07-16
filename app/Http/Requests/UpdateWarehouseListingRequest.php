@@ -28,7 +28,7 @@ class UpdateWarehouseListingRequest extends FormRequest
 
             [
                 // 🏢 Warehouse Listings
-                'peza_accredited' => ['sometimes', new Enum(AccreditationType::class)],
+                'PEZA_accredited' => ['sometimes', new Enum(AccreditationType::class)],
 
                 // 📦 Prop Details
                 'warehouse_listing_prop_details.unit_number' => 'nullable|string',

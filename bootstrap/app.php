@@ -24,18 +24,18 @@ return Application::configure(basePath: dirname(__DIR__))
         '/login',
         '/logout',
         '/register',
+
+        '/warehouselistings',
+        '/indlotlistings',
+        '/retailofficelistings',
+        '/officespacelistings',
+        '/commlotlistings',
       
         '/warehouselistings/*',
         '/indlotlistings/*',
         '/retailofficelistings/*',
         '/officespacelistings/*',
         '/commlotlistings/*',
-        
-        '/warehouselistings',
-        '/indlotlistings',
-        '/retailofficelistings',
-        '/officespacelistings',
-        '/commlotlistings',
 
         '/listings/*'
 

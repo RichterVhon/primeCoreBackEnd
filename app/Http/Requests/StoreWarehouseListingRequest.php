@@ -35,8 +35,8 @@ class StoreWarehouseListingRequest extends FormRequest
             $this->listingRules(), 
 
             [
-                //Warehouse Listings table
-                'peza_accredited' => ['required', new Enum(AccreditationType::class)],
+                // 🏢 Warehouse Listings table
+                'PEZA_accredited' => ['required', new Enum(AccreditationType::class)],
 
                 //warehouse_listing_prop_details table
                 'warehouse_listing_prop_details.unit_number' => 'nullable|string',

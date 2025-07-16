@@ -90,7 +90,7 @@ class OfficeSpaceListingController extends Controller
 
             // Create office listing morph target
             $officeSpace = OfficeSpaceListing::create([
-                // 'peza_accredited' => $data['peza_accredited'] ?? null // if applicable
+                // 'PEZA_accredited' => $data['PEZA_accredited'] ?? null // if applicable
             ]);
 
             // Create listing + attach morph

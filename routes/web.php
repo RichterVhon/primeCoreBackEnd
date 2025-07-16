@@ -28,6 +28,7 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::put('/officespace/{id}', [OfficeSpaceListingController::class, 'update'])->name('listings.officespace.update');
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
     Route::put('/retailoffice/{id}', [RetailOfficeListingController::class, 'update'])->name('listings.retailofficespace.update');
+    Route::put('/indlot/{id}', [IndLotListingController::class, 'update'])->name('listings.indlot.update');
 
 });
 

@@ -11,6 +11,7 @@ use App\Traits\HandlesListingCreation;
 use App\Models\ListingRelated\IndLotListing;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\StoreIndLotListingRequest;
+use App\Http\Requests\UpdateIndLotListingRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Http\Requests\StoreWarehouseListingRequest;
 
@@ -98,9 +99,9 @@ public function index(Request $request): JsonResponse
         $indlot = DB::transaction(function () use ($request) {
             $data = $request->validated();
 
-            // Create warehouse morph target
+            // Create indlot morph target
             $indlot = IndLotListing::create([
-                'PEZA_accredited' => $data['peza_accredited']
+                'PEZA_accredited' => $data['PEZA_accredited']
             ]);
 
             // Create listing + attach morph
@@ -109,7 +110,7 @@ public function index(Request $request): JsonResponse
             // 📎 Add nested listing components
             $this->createListingComponents($listing, $data['listing']);
 
-            // Add warehouse-specific components
+            // Add IndLot-specific components
             $indlot->IndLotListingPropertyDetails()->create($data['ind_lot_listing_property_details'] ?? []);
             $indlot->IndLotTurnoverConditions()->create($data['ind_lot_turnover_conditions'] ?? []);
             $indlot->IndLotLeaseRates()->create($data['ind_lot_lease_rates'] ?? []);
@@ -134,6 +135,56 @@ public function index(Request $request): JsonResponse
         return response()->json([
             'message' => 'Industrial Lot listing successfully created with all components.',
             'data' => $fullIndLot
+        ], 201);
+    }
+
+public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
+    {
+        $indlot = IndLotListing::with([
+            'listing',
+            'indlotListingPropertyDetails',
+            'indlotTurnoverConditions',
+            'indlotLeaseRates'
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($indlot, $data) {
+            // 🧱 Update indlot morph record
+            $indlot->update([
+                'PEZA_accredited' => $data['PEZA_accredited'] ?? $indlot->PEZA_accredited,
+            ]);
+
+            // 🧍 Update shared listing fields
+            $this->updateListing($indlot->listing, $data['listing'] ?? []);
+
+            // 🔄 Update listing components
+            $this->updateListingComponents($indlot->listing, $data['listing'] ?? []);
+
+            // ⚙️ Update IndLot components
+            $indlot->IndLotListingPropertyDetails()->update($data['ind_lot_listing_property_details'] ?? []);
+            $indlot->IndLotTurnoverConditions()->update($data['ind_lot_turnover_conditions'] ?? []);
+            $indlot->IndLotLeaseRates()->update($data['ind_lot_lease_rates'] ?? []);
+            return $indlot;
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = IndLotListing::with([
+           'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'IndLotListingPropertyDetails',
+            'IndLotTurnoverConditions',
+            'IndLotLeaseRates'
+        ])->findOrFail($indlot->id);
+
+        return response()->json([
+            'message' => 'Industrial Lot listing successfully updated.',
+            'data' => $updated
         ], 201);
     }
 
