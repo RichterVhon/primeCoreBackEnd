@@ -18,9 +18,13 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
+    
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
     Route::post('/indlot', [IndLotListingController::class, 'store'])->name('listings.indlot.store');
+    Route::post('/commlot', [CommLotListingController::class, 'store'])->name('listings.commlot.store');
+
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
+
 });
 
 // Group for warehouse-specific listings
@@ -42,6 +46,9 @@ Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
 Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [CommLotListingController::class, 'index']);
     Route::get('/{id}', [CommLotListingController::class, 'show']);
+    Route::post('/', [CommLotListingController::class, 'store'])->name('commlot.store');
+
+    
 });
 
 //Group for retail-specific listings

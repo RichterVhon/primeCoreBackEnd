@@ -57,3 +57,4 @@ class CommLotListing extends Model
         return $this->hasOne(\App\Models\ListingRelated\CommLotListingPropertyDetails::class, 'comm_lot_listing_id');
     }   
 }
+
