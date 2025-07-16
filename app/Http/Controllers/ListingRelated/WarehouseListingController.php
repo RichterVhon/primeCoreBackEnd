@@ -104,7 +104,7 @@ class WarehouseListingController extends Controller
 
             // Create warehouse morph target
             $warehouse = WarehouseListing::create([
-                'peza_accredited' => $data['peza_accredited']
+                'PEZA_accredited' => $data['PEZA_accredited']
             ]);
 
             // Create listing + attach morph
@@ -159,7 +159,7 @@ class WarehouseListingController extends Controller
         DB::transaction(function () use ($warehouse, $data) {
             // 🧱 Update warehouse morph record
             $warehouse->update([
-                'peza_accredited' => $data['peza_accredited'] ?? $warehouse->peza_accredited,
+                'PEZA_accredited' => $data['PEZA_accredited'] ?? $warehouse->PEZA_accredited,
             ]);
 
             // 🧍 Update shared listing fields

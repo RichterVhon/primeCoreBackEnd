@@ -100,7 +100,7 @@ public function index(Request $request): JsonResponse
 
             // Create warehouse morph target
             $indlot = IndLotListing::create([
-                'PEZA_accredited' => $data['peza_accredited']
+                'PEZA_accredited' => $data['PEZA_accredited']
             ]);
 
             // Create listing + attach morph
