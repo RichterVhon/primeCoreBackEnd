@@ -3,6 +3,7 @@
 namespace App\Models\ListingRelated;
 
 use App\Traits\HasCustomId;
+use App\Traits\HasListingValidationRules;
 use App\Traits\HasSearch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,6 +16,7 @@ class OfficeSpaceListing extends Model
     use HasFactory;
     use HasSearch;
     use HasCustomId;
+    use HasListingValidationRules;
 
     protected $fillable = [
         'custom_id',

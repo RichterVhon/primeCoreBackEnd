@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         '/listings/indlot',
         '/indlot',
         '/listings/officespace',
+        '/retailofficelistings',
         '/officespacelistings',
         '/retailofficelistings',
         '/listings/*'
