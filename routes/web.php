@@ -18,8 +18,12 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
+  
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
     Route::post('/officespace', [OfficeSpaceListingController::class, 'store'])->name('listings.officespace.store');
+    Route::post('/indlot', [IndLotListingController::class, 'store'])->name('listings.indlot.store');
+    Route::post('/retailoffice', [RetailOfficeListingController::class,'store'])->name('listings.retailoffice.store');
+
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
 
 });
@@ -35,6 +39,8 @@ Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
 Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [IndLotListingController::class, 'index']);
     Route::get('/{id}', [IndLotListingController::class, 'show']);
+    Route::post('/', [IndLotListingController::class, 'store'])->name('indlot.store');
+
 });
 
 //Group for CommLot-specific listings
@@ -47,6 +53,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
 Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
+    Route::post('/', [RetailOfficeListingController::class,'store'])->name('retailoffice.store');
 });
 
 // Group for office-specific listings

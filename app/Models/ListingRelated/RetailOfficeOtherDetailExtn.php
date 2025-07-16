@@ -21,7 +21,7 @@ class RetailOfficeOtherDetailExtn extends Model
         'pylon_availability',
         'total_floor_count',
         'other_remarks',
-        'retail_office_listing_id',
+        //'retail_office_listing_id',
     ];
 
     protected $casts = [
