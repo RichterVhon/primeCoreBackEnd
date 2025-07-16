@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\RetailOfficeListing;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Http\Requests\StoreRetailOfficeListingRequest;
+use App\Http\Requests\UpdateRetailOfficeListingRequest;
 
 class RetailOfficeListingController extends Controller
 {
@@ -107,11 +108,11 @@ class RetailOfficeListingController extends Controller
             // Create listing + attach morph
             $listing = $this->createListing($data['listing'], $retailOffice);
 
-            // 📎 Add nested listing components
+            // Add nested listing components
             $this->createListingComponents($listing, $data['listing']);
             $otherDetail = $listing->otherDetail;
 
-            // 🧱 Create related retail office components
+            // Create related retail office components
             $retailOffice->retailOfficeListingPropertyDetails()->create($data['retail_office_listing_property_details'] ?? []);
             $retailOffice->retailOfficeTurnoverConditions()->create($data['retail_office_turnover_conditions'] ?? []);
             $retailOffice->retailOfficeBuildingSpecs()->create($data['retail_office_building_specs'] ?? []);
@@ -145,6 +146,60 @@ class RetailOfficeListingController extends Controller
         ], 201);
     }
 
+    public function update(UpdateRetailOfficeListingRequest $request, $id): JsonResponse
+    {
+        $retailoffice = RetailOfficeListing::with([
+            'listing',
+            'RetailOfficeListingPropertyDetails',
+            'RetailOfficeTurnoverConditions',
+            'RetailOfficeBuildingSpecs',
+            'RetailOfficeOtherDetailExtn',
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($retailoffice, $data) {
+
+            // Update the already existing listing fields
+            $this->updateListing($retailoffice->listing, $data['listing'] ?? []);
+
+            // Update for its components
+            $this->updateListingComponents($retailoffice->listing, $data['listing'] ?? []);
+
+            // Update officespace components
+            $retailoffice->retailOfficeListingPropertyDetails()->update($data['retail_office_listing_property_details'] ?? []);
+            $retailoffice->retailOfficeTurnoverConditions()->update($data['retail_office_turnover_conditions'] ?? []);
+            $retailoffice->retailOfficeBuildingSpecs()->update($data['retail_office_building_specs'] ?? []);
+            $retailoffice->retailOfficeOtherDetailExtn()->update($data['retail_office_other_detail_extn'] ?? []);
+
+                // $retailoffice->officeSpecs()->update($data['office_specs'] ?? []);
+                // $retailoffice->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
+                // $retailoffice->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
+                // $retailoffice->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
+                // $retailoffice->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
+
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = RetailOfficeListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'RetailOfficeListingPropertyDetails',
+            'RetailOfficeTurnoverConditions',
+            'RetailOfficeBuildingSpecs',
+            'RetailOfficeOtherDetailExtn',
+        ])->findOrFail($retailoffice->id);
+
+        return response()->json([
+            'message' => 'officespace listing successfully updated.',
+            'data' => $updated
+        ], 201);
+    }
 
 
 }

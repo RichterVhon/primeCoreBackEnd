@@ -11,9 +11,9 @@ use Illuminate\Validation\Rules\Enum;
 use App\Traits\HasListingValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRetailOfficeListingRequest extends FormRequest
+class UpdateRetailOfficeListingRequest extends FormRequest
 {
-    /**
+     /**
      * Determine if the user is authorized to make this request.
      */
 
@@ -32,7 +32,7 @@ class StoreRetailOfficeListingRequest extends FormRequest
     public function rules(): array
     {
         return array_merge(
-            $this->listingRules(),
+            $this->listingRulesForUpdate(),
             [
                 // retail_office_turnover_conditions table
                 'retail_office_turnover_conditions.frontage_turnover' => 'required|string',
@@ -45,21 +45,21 @@ class StoreRetailOfficeListingRequest extends FormRequest
 
                 // retail_office_building_specs table
                 'retail_office_building_specs.PSI' => 'nullable|numeric',
-                'retail_office_building_specs.handover' => ['required', new Enum(HandoverType::class)],
+                'retail_office_building_specs.handover' => ['sometimes', new Enum(HandoverType::class)],
                 'retail_office_building_specs.ceiling' => 'nullable|string',
                 'retail_office_building_specs.wall' => 'nullable|string',
                 'retail_office_building_specs.floor' => 'nullable|string',
                 'retail_office_building_specs.building_ops' => 'nullable|string',
-                'retail_office_building_specs.backup_power' => ['required', new Enum(BackUpPowerOption::class)],
-                'retail_office_building_specs.provision_for_genset' => ['required', new Enum(GenSetProvision::class)],
+                'retail_office_building_specs.backup_power' => ['sometimes', new Enum(BackUpPowerOption::class)],
+                'retail_office_building_specs.provision_for_genset' => ['sometimes', new Enum(GenSetProvision::class)],
                 'retail_office_building_specs.security_system' => 'nullable|string',
                 'retail_office_building_specs.telecom_providers' => 'nullable|string',
                 'retail_office_building_specs.passenger_elevators' => 'nullable|integer',
                 'retail_office_building_specs.service_elevators' => 'nullable|integer',
-                'retail_office_building_specs.drainage_provision' => ['required', new Enum(GenSetProvision::class)],
-                'retail_office_building_specs.sewage_treatment_plan' => ['required', new Enum(GenSetProvision::class)],
-                'retail_office_building_specs.plumbing_provision' => ['required', new Enum(GenSetProvision::class)],
-                'retail_office_building_specs.toilet' => ['required', new Enum(Toilets::class)],
+                'retail_office_building_specs.drainage_provision' => ['sometimes', new Enum(GenSetProvision::class)],
+                'retail_office_building_specs.sewage_treatment_plan' => ['sometimes', new Enum(GenSetProvision::class)],
+                'retail_office_building_specs.plumbing_provision' => ['sometimes', new Enum(GenSetProvision::class)],
+                'retail_office_building_specs.toilet' => ['sometimes', new Enum(Toilets::class)],
                 'retail_office_building_specs.tenant_restrictions' => 'nullable|string',
                 'retail_office_building_specs.parking_rate_slot' => 'nullable|numeric',
                 'retail_office_building_specs.parking_rate_allotment' => 'nullable|numeric',
@@ -68,7 +68,7 @@ class StoreRetailOfficeListingRequest extends FormRequest
                 'retail_office_building_specs.mezzanine' => 'nullable|numeric',
 
                 // retail_office_other_detail_extns table
-                'retail_office_other_detail_extn.pylon_availability' => ['required', new Enum(Pylonavailability::class)],
+                'retail_office_other_detail_extn.pylon_availability' => ['sometimes', new Enum(Pylonavailability::class)],
                 'retail_office_other_detail_extn.total_floor_count' => 'nullable|integer',
                 'retail_office_other_detail_extn.other_remarks' => 'nullable|string',
             ]
