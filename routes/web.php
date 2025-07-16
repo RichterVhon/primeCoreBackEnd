@@ -8,7 +8,7 @@ use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
 use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
-
+use App\Models\ListingRelated\OfficeSpaceListing;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
@@ -18,10 +18,12 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
-    
+
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
+    Route::post('/officespace', [OfficeSpaceListingController::class, 'store'])->name('listings.officespace.store');
     Route::post('/indlot', [IndLotListingController::class, 'store'])->name('listings.indlot.store');
     Route::post('/commlot', [CommLotListingController::class, 'store'])->name('listings.commlot.store');
+    Route::post('/retailoffice', [RetailOfficeListingController::class,'store'])->name('listings.retailoffice.store');
 
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
 
@@ -55,12 +57,14 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
 Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
+    Route::post('/', [RetailOfficeListingController::class,'store'])->name('retailoffice.store');
 });
 
 // Group for office-specific listings
 Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [OfficeSpaceListingController::class, 'index']);
     Route::get('/{id}', [OfficeSpaceListingController::class, 'show']);
+    Route::post('/', [OfficeSpaceListingController::class, 'store'])->name('officespace.store');
 });
 
 

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\ListingRelated;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Traits\HandlesListingCreation;
 use App\Models\ListingRelated\OfficeSpaceListing;
+use App\Http\Requests\StoreOfficeSpaceListingRequest;
 
 class OfficeSpaceListingController extends Controller
 {
@@ -56,6 +59,63 @@ class OfficeSpaceListingController extends Controller
         ]);
     }
 
+    use HandlesListingCreation;
+
+    public function store(StoreOfficeSpaceListingRequest $request): JsonResponse
+    {
+        $officeSpace = DB::transaction(function () use ($request) {
+            $data = $request->validated();
+
+            // Create office listing morph target
+            $officeSpace = OfficeSpaceListing::create([
+                // 'peza_accredited' => $data['peza_accredited'] ?? null // if applicable
+            ]);
+
+            // Create listing + attach morph
+            $listing = $this->createListing($data['listing'], $officeSpace);
+
+            // 📎 Add nested core listing components
+            $this->createListingComponents($listing, $data['listing']);
+            $otherDetail = $listing->otherDetail;
+            $leaseterms = $listing->leaseTermsAndConditions;
+            // 🔗 Add office-specific components
+            $officeSpace->officeSpecs()->create($data['office_specs'] ?? []);
+            $officeSpace->officeTurnoverConditions()->create($data['office_turnover_conditions'] ?? []);
+            $officeSpace->officeListingPropertyDetails()->create($data['office_listing_property_details'] ?? []);
+            $officeSpace->officeOtherDetailExtn()->create(array_merge(
+                $data['office_other_detail_extn'] ?? [],
+                ['other_detail_id' => $otherDetail->id]
+            ));
+            $officeSpace->officeLeaseTermsAndConditionsExtn()->create(array_merge(
+                $data['office_lease_terms_extn'] ?? [],
+                ['lease_terms_and_conditions_id' => $leaseterms->id]
+            ));
+            
+            return $officeSpace;
+        });
+
+        // ⏪ Fetch full relationship tree
+        $fullOfficeSpace = OfficeSpaceListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'officeSpecs',
+            'officeTurnoverConditions',
+            'officeListingPropertyDetails',
+            'officeOtherDetailExtn',
+            'officeLeaseTermsAndConditionsExtn',
+        ])->findOrFail($officeSpace->id);
+
+        return response()->json([
+            'message' => 'Office listing successfully created with all components.',
+            'data' => $fullOfficeSpace
+        ], 201);
+    }
+
     public function show($id): JsonResponse
     {
         $Office = OfficeSpaceListing::with([
@@ -70,8 +130,8 @@ class OfficeSpaceListingController extends Controller
             'OfficeListingPropertyDetails',
             'OfficeTurnoverConditions',
             'OfficeSpecs',
-            // 'OfficeLeaseTermsAndConditionsExtn',
-            // 'OfficeOtherDetailExtn',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeOtherDetailExtn',
         ])->findOrFail($id);
 
         return response()->json(['data' => $Office]);
