@@ -12,8 +12,11 @@ class CommLotTurnoverConditions extends Model
     use HasFactory;
     protected $fillable = [
         'comm_lot_listing_id',
-        'lot_condition' => LotCondition::class,
+        'lot_condition',
         'turnover_remarks',
+    ];
+    protected $casts = [
+        'lot_condition' => LotCondition::class,
     ];
 
     public function commLotListing(): BelongsTo
