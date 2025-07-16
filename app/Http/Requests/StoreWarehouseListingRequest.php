@@ -35,10 +35,10 @@ class StoreWarehouseListingRequest extends FormRequest
             $this->listingRules(), 
 
             [
-                // 🏢 Warehouse Listings table
+                //Warehouse Listings table
                 'peza_accredited' => ['required', new Enum(AccreditationType::class)],
 
-                // 📦 warehouse_listing_prop_details table
+                //warehouse_listing_prop_details table
                 'warehouse_listing_prop_details.unit_number' => 'nullable|string',
                 'warehouse_listing_prop_details.leasable_warehouse_area_on_the_ground_floor' => 'nullable|numeric',
                 'warehouse_listing_prop_details.leasable_warehouse_area_on_the_upper_floor' => 'nullable|numeric',
@@ -48,13 +48,13 @@ class StoreWarehouseListingRequest extends FormRequest
                 'warehouse_listing_prop_details.total_leasable_area_open_covered' => 'nullable|numeric',
                 'warehouse_listing_prop_details.FDAS' => ['required', new Enum(YesNo::class)],
 
-                // 🧱 warehouse_turnover_conditions table
+                //warehouse_turnover_conditions table
                 'warehouse_turnover_conditions.flooring_turnover' => 'nullable|string',
                 'warehouse_turnover_conditions.ceiling_turnover' => 'nullable|string',
                 'warehouse_turnover_conditions.wall_turnover' => 'nullable|string',
                 'warehouse_turnover_conditions.turnover_remarks' => 'nullable|string',
 
-                // ⚙️ warehouse_specs table
+                //warehouse_specs table
                 'warehouse_specs.application_of_cusa' => 'nullable|string',
                 'warehouse_specs.apex' => 'nullable|numeric',
                 'warehouse_specs.shoulder_height' => 'nullable|numeric',
@@ -69,7 +69,7 @@ class StoreWarehouseListingRequest extends FormRequest
                 'warehouse_specs.concrete_floor_strength' => 'nullable|numeric',
                 'warehouse_specs.parking_rate_slot' => 'nullable|numeric',
 
-                // 💰 warehouse_lease_rates table
+                //warehouse_lease_rates table
                 'warehouse_lease_rates.rental_rate_sqm_for_open_area' => 'nullable|numeric',
                 'warehouse_lease_rates.rental_rate_sqm_for_covered_warehouse_area' => 'nullable|numeric',
                 'warehouse_lease_rates.rental_rate_sqm_for_office_area' => 'nullable|numeric',

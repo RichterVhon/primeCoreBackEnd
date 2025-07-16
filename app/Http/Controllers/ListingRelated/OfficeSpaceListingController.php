@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\HandlesListingCreation;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Requests\StoreOfficeSpaceListingRequest;
+use App\Http\Requests\UpdateOfficeSpaceListingRequest;
 
 class OfficeSpaceListingController extends Controller
 {
@@ -61,6 +62,27 @@ class OfficeSpaceListingController extends Controller
 
     use HandlesListingCreation;
 
+    public function show($id): JsonResponse
+    {
+        $Office = OfficeSpaceListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.contacts',
+            'listing.leaseDocument',
+            'listing.inquiries',
+            'listing.otherDetail',
+            'listing.leaseTermsAndConditions',
+
+            'OfficeListingPropertyDetails',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeOtherDetailExtn',
+        ])->findOrFail($id);
+
+        return response()->json(['data' => $Office]);
+    }
+
     public function store(StoreOfficeSpaceListingRequest $request): JsonResponse
     {
         $officeSpace = DB::transaction(function () use ($request) {
@@ -90,7 +112,7 @@ class OfficeSpaceListingController extends Controller
                 $data['office_lease_terms_extn'] ?? [],
                 ['lease_terms_and_conditions_id' => $leaseterms->id]
             ));
-            
+
             return $officeSpace;
         });
 
@@ -116,17 +138,10 @@ class OfficeSpaceListingController extends Controller
         ], 201);
     }
 
-    public function show($id): JsonResponse
+    public function update(UpdateOfficeSpaceListingRequest $request, $id): JsonResponse
     {
-        $Office = OfficeSpaceListing::with([
-            'listing.account',
-            'listing.location',
-            'listing.contacts',
-            'listing.leaseDocument',
-            'listing.inquiries',
-            'listing.otherDetail',
-            'listing.leaseTermsAndConditions',
-
+        $officespace = officespaceListing::with([
+            'listing',
             'OfficeListingPropertyDetails',
             'OfficeTurnoverConditions',
             'OfficeSpecs',
@@ -134,6 +149,49 @@ class OfficeSpaceListingController extends Controller
             'OfficeOtherDetailExtn',
         ])->findOrFail($id);
 
-        return response()->json(['data' => $Office]);
+        $data = $request->validated();
+
+        DB::transaction(function () use ($officespace, $data) {
+
+            // Update the already existing listing fields
+            $this->updateListing($officespace->listing, $data['listing'] ?? []);
+
+            // Update for its components
+            $this->updateListingComponents($officespace->listing, $data['listing'] ?? []);
+
+            // Update officespace components
+            $officespace->officeSpecs()->update($data['office_specs'] ?? []);
+            $officespace->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
+            $officespace->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
+            $officespace->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
+            $officespace->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
+
+
+            // $officespace->officespaceListingPropDetails()->update($data['officespace_listing_prop_details'] ?? []);
+            // $officespace->officespaceTurnoverConditions()->update($data['officespace_turnover_conditions'] ?? []);
+            // $officespace->officespaceSpecs()->update($data['officespace_specs'] ?? []);
+            // $officespace->officespaceLeaseRate()->update($data['officespace_lease_rates'] ?? []);
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = officespaceListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'officeSpecs',
+            'officeTurnoverConditions',
+            'officeListingPropertyDetails',
+            'officeOtherDetailExtn',
+            'officeLeaseTermsAndConditionsExtn',
+        ])->findOrFail($officespace->id);
+
+        return response()->json([
+            'message' => 'officespace listing successfully updated.',
+            'data' => $updated
+        ], 201);
     }
 }
