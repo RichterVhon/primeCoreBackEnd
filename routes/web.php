@@ -27,6 +27,7 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
 
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
     Route::put('/indlot/{id}', [IndLotListingController::class, 'update'])->name('listings.indlot.update');
+    Route::put('/commlot/{id}', [CommLotListingController::class, 'update'])->name('listings.commlot.update');
 
 
 });
