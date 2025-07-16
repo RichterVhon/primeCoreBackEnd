@@ -97,7 +97,7 @@ public function index(Request $request): JsonResponse
 
             // 🏗️ Create CommLot morph target
             $commLot = CommLotListing::create([
-                //'peza_accredited' => $data['peza_accredited'] ?? false
+                //'PEZA_accredited' => $data['PEZA_accredited'] ?? false
             ]);
 
             // 🔗 Create listing + attach morph

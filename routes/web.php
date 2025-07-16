@@ -26,6 +26,8 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::post('/retailoffice', [RetailOfficeListingController::class,'store'])->name('listings.retailoffice.store');
 
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
+    Route::put('/indlot/{id}', [IndLotListingController::class, 'update'])->name('listings.indlot.update');
+
 
 });
 
