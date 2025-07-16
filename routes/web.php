@@ -20,6 +20,7 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
     Route::post('/indlot', [IndLotListingController::class, 'store'])->name('listings.indlot.store');
+    Route::post('/retailoffice', [RetailOfficeListingController::class,'store'])->name('listings.retailoffice.store');
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
 });
 
@@ -48,6 +49,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
 Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
+    Route::post('/', [RetailOfficeListingController::class,'store'])->name('retailoffice.store');
 });
 
 // Group for office-specific listings
