@@ -92,7 +92,7 @@ class CommLotListingController extends Controller
                 'message' => "Commercial Listing with ID {$id} has been deleted."
             ], 410); // 410 Gone is semantically accurate
         }
-        
+
         if (!$commlot) {
             return response()->json([
                 'message' => "Commercial Lot Listing with ID {$id} does not exist."
@@ -165,8 +165,9 @@ class CommLotListingController extends Controller
         return response()->json([
             'message' => 'Commercial Lot listing and related data successfully soft deleted.'
         ]);
+    }
 
-public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
+    public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
     {
         $commlot = CommLotListing::with([
             'listing',
@@ -196,7 +197,7 @@ public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
 
         // 🧾 Return fully refreshed listing with all relationships
         $updated = CommLotListing::with([
-           'listing.account',
+            'listing.account',
             'listing.location',
             'listing.leaseDocument',
             'listing.leaseTermsAndConditions',
@@ -205,7 +206,7 @@ public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
             'listing.inquiries',
             'commlotListingPropertyDetails',
             'commlotTurnoverConditions'
-        
+
         ])->findOrFail($commlot->id);
 
         return response()->json([
