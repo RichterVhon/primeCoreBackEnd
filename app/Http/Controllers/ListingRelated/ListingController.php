@@ -4,13 +4,14 @@ namespace App\Http\Controllers\ListingRelated;
 
 use App\Enums\AccountRole;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\ListingRelated\Listing;
 use App\Models\ListingRelated\IndLotListing;
 use App\Models\ListingRelated\CommLotListing;
@@ -33,12 +34,26 @@ class ListingController extends Controller
             $query->search($request->input('search'), Listing::searchableFields());
         }
 
-        $query->applyFilters($request->only(Listing::filterableFields()));
+        // ✅ Use raw keys as passed from frontend
+        $filters = array_filter(
+            $request->query(),
+            fn($key) => in_array($key, Listing::filterableFields()),
+            ARRAY_FILTER_USE_KEY
+        );
 
+        // // 🐞 Debug: show which filters are being applied
+        // foreach ($filters as $key => $value) {
+        //     dump("Filter: {$key} = {$value}");
+        // }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
+        // 🐞 Debug SQL
+        //dd($query->toSql(), $query->getBindings());
+
         $listings = $query
-            ->with(['account', 'listable', 'inquiries'])
+            ->with(['location', 'listable', 'inquiries', 'otherDetail'])
             ->paginate(10)
             ->appends($request->query());
 
@@ -54,7 +69,6 @@ class ListingController extends Controller
             ]
         ]);
     }
-
     public function show($id): JsonResponse
     {
         $user = Auth::user();

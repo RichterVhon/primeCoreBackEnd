@@ -22,25 +22,43 @@ trait HasSearch
         });
     }
 
-public function scopeApplyFilters(Builder $query, array $filters): Builder
-{
-    foreach ($filters as $key => $value) {
-        if (!is_null($value)) {
-            if (str_contains($key, '.')) {
-                $segments = explode('.', $key);
-                $field = array_pop($segments); // Get the column name
-                $relation = implode('.', $segments); // Rebuild the relationship path
+    public function scopeApplyFilters(Builder $query, array $filters): Builder
+    {
+        $model = $query->getModel();
+        $relationMethods = collect(get_class_methods($model))
+            ->filter(fn($method) => method_exists($model, $method) && is_callable([$model, $method]))
+            ->toArray();
 
-                $query->whereHas($relation, function ($q) use ($field, $value) {
-                    $q->where($field, '=', $value);
-                });
-            } else {
+        foreach ($filters as $key => $value) {
+            if (!is_null($value)) {
+                if (str_contains($key, '_')) {
+                    $segments = explode('_', $key);
+                    $relation = array_shift($segments);
+                    $field = implode('_', $segments);
+
+                    if (in_array($relation, $relationMethods)) {
+                        //dump("→ whereHas: {$relation}, field: {$field}, value: {$value}");
+
+                        $query->whereHas($relation, function ($q) use ($field, $value) {
+                            //dump("→ SQL inside whereHas: {$field} = {$value}");
+                            $q->where($field, '=', $value);
+                        });
+
+                        continue;
+                    }
+                }
+
+                //dump("→ direct where: {$key} = {$value}");
                 $query->where($key, '=', $value);
             }
         }
+
+        return $query;
     }
 
-    return $query;
-}
+
+
+
+
 
 }
