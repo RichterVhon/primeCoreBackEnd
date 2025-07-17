@@ -188,4 +188,22 @@ public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
         ], 201);
     }
 
+   public function destroy($id): JsonResponse
+    {
+        $indlot = IndLotListing::with([
+            'listing',
+            'indLotLeaseRates',
+            'indLotTurnoverConditions',
+            'indLotListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($indlot) {
+            $indlot->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Industrial Lot listing and related data successfully soft deleted.'
+        ]);
+    }
+
 }

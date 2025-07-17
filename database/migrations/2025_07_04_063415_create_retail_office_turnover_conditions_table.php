@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('frontage_turnover');
             $table->text('turnover_remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

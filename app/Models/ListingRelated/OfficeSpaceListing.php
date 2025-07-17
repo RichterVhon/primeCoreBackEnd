@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use App\Traits\HasSearch;
 
 use App\Traits\HasCustomId;
-use App\Traits\HasListingValidationRules;
-use App\Traits\HasSearch;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasListingValidationRules;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OfficeSpaceListing extends Model
 {
+    use SoftDeletes;
     use HasFactory;
     use HasSearch;
     use HasCustomId;
@@ -76,5 +79,44 @@ class OfficeSpaceListing extends Model
     public function OfficeListingPropertyDetails(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\OfficeListingPropertyDetails::class, 'office_space_listing_id');
+    }
+
+    protected static bool $deletionGuard = false;
+
+    protected static function booted()
+    {
+        static::deleting(function ($officespace) {
+            if (self::$deletionGuard) {
+                Log::info("🛑 Skipping OfficeSpace deletion due to guard");
+                return;
+            }
+
+            Log::info("⛔ Deleting OfficeSpaceListing ID {$officespace->id}");
+            self::$deletionGuard = true;
+
+            // Delete OfficeSpace components
+            $officespace->OfficeLeaseTermsAndConditionsExtn?->delete();
+            Log::info("✔ Deleted OfficeLeaseTermsAndConditionsExtn");
+
+            $officespace->OfficeTurnoverConditions?->delete();
+            Log::info("✔ Deleted OfficeTurnoverConditions");
+
+            $officespace->OfficeSpecs?->delete();
+            Log::info("✔ Deleted OfficeSpecs");
+
+            $officespace->OfficeOtherDetailExtn?->delete();
+            Log::info("✔ Deleted OfficeOtherDetailExtn");
+
+            $officespace->OfficeListingPropertyDetails?->delete();
+            Log::info("✔ Deleted OfficeListingPropertyDetails");
+
+            // Delete associated Listing
+            if ($officespace->listing && !$officespace->listing->trashed()) {
+                Log::info("🔁 Deleting linked Listing ID {$officespace->listing->id}");
+                $officespace->listing->delete();
+            }
+
+            self::$deletionGuard = false;
+        });
     }
 }

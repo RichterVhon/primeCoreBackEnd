@@ -90,7 +90,7 @@ class OfficeSpaceListingController extends Controller
                 $data['office_lease_terms_extn'] ?? [],
                 ['lease_terms_and_conditions_id' => $leaseterms->id]
             ));
-            
+
             return $officeSpace;
         });
 
@@ -136,4 +136,25 @@ class OfficeSpaceListingController extends Controller
 
         return response()->json(['data' => $Office]);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $officespace = OfficeSpaceListing::with([
+            'listing',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeOtherDetailExtn',
+            'OfficeListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($officespace) {
+            $officespace->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Office space listing and related data successfully soft deleted.'
+        ]);
+    }
+
 }

@@ -30,6 +30,7 @@ return new class extends Migration
             $table->integer('total_floor_count')->nullable();
             $table->text('other_remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

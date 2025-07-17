@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('water_meter')->nullable();
             $table->integer('year_built')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

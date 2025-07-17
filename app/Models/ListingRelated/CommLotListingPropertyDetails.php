@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\LotShape;
 use App\Enums\ZoningClassification;
@@ -8,8 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CommLotListingPropertyDetails extends Model
-{
+class CommLotListingPropertyDetails extends Model {
+    use SoftDeletes;
     use HasFactory;
     protected $fillable = [
         'comm_lot_listing_id',

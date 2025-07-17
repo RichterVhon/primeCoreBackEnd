@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\ApplicationOfAdvance;
 use App\Enums\EscalationFrequency;
@@ -9,8 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class LeaseTermsAndConditions extends Model
-{
+class LeaseTermsAndConditions extends Model {
+    use SoftDeletes;
     use HasFactory;
 
     protected $fillable = [

@@ -16,7 +16,7 @@ use App\Http\Requests\StoreCommLotListingRequest;
 
 class CommLotListingController extends Controller
 {
-public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
@@ -24,7 +24,7 @@ public function index(Request $request): JsonResponse
                 'message' => 'Forbidden: Agents or Admin only'
             ], Response::HTTP_FORBIDDEN);
         }
-        
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -83,11 +83,11 @@ public function index(Request $request): JsonResponse
             'CommLotListingPropertyDetails',
             'CommLotTurnoverConditions'
 
-         
+
         ])->findOrFail($id);
 
         return response()->json(['data' => $commlot]);
-    }    
+    }
     use HandlesListingCreation;
 
     public function store(StoreCommLotListingRequest $request): JsonResponse
@@ -136,6 +136,23 @@ public function index(Request $request): JsonResponse
             'data' => $fullCommLot
         ], 201);
     }
-    
+
+    public function destroy($id): JsonResponse
+    {
+        $commlot = CommLotListing::with([
+            'listing',
+            'commLotTurnoverConditions',
+            'commLotListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($commlot) {
+            $commlot->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Commercial Lot listing and related data successfully soft deleted.'
+        ]);
+    }
+
 }
 

@@ -7,16 +7,17 @@ use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ListingRelated\Listing;
 
+use App\Models\ListingRelated\Listing;
+use App\Models\ListingRelated\IndLotListing;
+use App\Models\ListingRelated\CommLotListing;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Models\ListingRelated\OfficeSpaceListing;
-use App\Models\ListingRelated\CommLotListing;
-use App\Models\ListingRelated\IndLotListing;
-use App\Models\ListingRelated\IndLotListingPropertyDetails;
 use App\Models\ListingRelated\RetailOfficeListing;
+use App\Models\ListingRelated\IndLotListingPropertyDetails;
 
 
 class ListingController extends Controller
@@ -105,4 +106,27 @@ class ListingController extends Controller
 
         return response()->json(['data' => $listing]);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $listing = Listing::with([
+            'location',
+            'leaseDocument',
+            'leaseTermsAndConditions',
+            'otherDetail',
+            'contacts',
+            'inquiries',
+            'listable'
+        ])->findOrFail($id);
+
+
+        DB::transaction(function () use ($listing) {
+            $listing->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Listing and related data successfully soft deleted.'
+        ]);
+    }
+
 }

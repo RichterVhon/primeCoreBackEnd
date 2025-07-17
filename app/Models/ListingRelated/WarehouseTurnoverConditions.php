@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WarehouseTurnoverConditions extends Model
-{
+class WarehouseTurnoverConditions extends Model {
+    use SoftDeletes;
     use HasFactory;
     protected $fillable =[
         'warehouse_listing_id',

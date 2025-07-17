@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text('message');
             $table->dateTime('viewing_schedule')->nullable(); 
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

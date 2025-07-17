@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models\ListingRelated;
-
 use App\Traits\HasSearch;
+
 use App\Enums\AuthorityType;
 use App\Enums\ListingStatus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -15,19 +17,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Listing extends Model
 {
+    use SoftDeletes;
     use HasFactory;
     use HasSearch;
     // hindi ko na lagay here yung name ng table, basta rapat ang name ng table ng listing ay "listings" (matic na sa laravel kasi yun)
 
     protected $fillable = [
         'account_id',
-        'status', 
+        'status',
         'date_last_updated',
         'date_uploaded',
         'project_name',
         'property_name',
         'bd_incharge',
-        'authority_type', 
+        'authority_type',
         'bd_securing_remarks',
         'listable_id',
         'custom_listable_id',
@@ -37,8 +40,8 @@ class Listing extends Model
     ];
 
     protected $casts = [
-        'status'=> ListingStatus::class,
-        'authority_type'=>AuthorityType::class,
+        'status' => ListingStatus::class,
+        'authority_type' => AuthorityType::class,
     ];
 
     public static function searchableFields(): array
@@ -63,29 +66,29 @@ class Listing extends Model
 
     public function location(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\Location::class);
+        return $this->hasOne(\App\Models\ListingRelated\Location::class)->withTrashed();
     }
 
     public function leaseDocument(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\LeaseDocument::class);
+        return $this->hasOne(\App\Models\ListingRelated\LeaseDocument::class)->withTrashed();
     }
 
     public function otherDetail(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\OtherDetailRelated\OtherDetail::class);
+        return $this->hasOne(\App\Models\ListingRelated\OtherDetailRelated\OtherDetail::class)->withTrashed();
     }
 
-    
+
     public function leaseTermsAndConditions(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\LeaseTermsAndConditions::class);
+        return $this->hasOne(\App\Models\ListingRelated\LeaseTermsAndConditions::class)->withTrashed();
     }
-    
+
 
     public function inquiries(): HasMany
     {
-        return $this->hasMany(\App\Models\Inquiry::class);
+        return $this->hasMany(\App\Models\Inquiry::class)->withTrashed();
     }
 
 
@@ -94,7 +97,7 @@ class Listing extends Model
         return $this->belongsToMany(\App\Models\Contact::class)
             ->using(\App\Models\ContactListing::class)
             ->withTimestamps()
-            ->withPivot('company');
+            ->withPivot('company')->withTrashed();
     }
 
     public function account(): BelongsTo
@@ -102,16 +105,56 @@ class Listing extends Model
         return $this->belongsTo(\App\Models\Account::class);
     }
 
-    public function listable(): MorphTo 
+    public function listable(): MorphTo
     {
-        return $this->morphTo();
+        return $this->morphTo()->withTrashed();
     }
 
+    protected static bool $deletionGuard = false;
     protected static function booted()
     {
         static::creating(function ($listing) {
             $listing->load('listable');
             $listing->custom_listable_id = $listing->listable->custom_id ?? 'UNSET';
+        });
+
+        static::deleting(function ($listing) {
+            if (self::$deletionGuard) {
+                Log::info("🛑 Skipping Listing deletion due to guard");
+                return;
+            }
+
+            Log::info("⛔ Deleting Listing ID {$listing->id}");
+            self::$deletionGuard = true;
+
+            // Delete Listing components
+            $listing->location?->delete();
+            Log::info("✔ Deleted location");
+
+            $listing->leaseDocument?->delete();
+            Log::info("✔ Deleted leaseDocument");
+
+            $listing->leaseTermsAndConditions?->delete();
+            Log::info("✔ Deleted leaseTerms");
+
+            $listing->otherDetail?->delete();
+            Log::info("✔ Deleted otherDetail");
+
+            $listing->inquiries()->each(function ($inquiry) {
+                $inquiry->delete();
+            });
+            Log::info("✔ Deleted inquiries");
+
+            $listing->contacts()->detach();
+            Log::info("✔ Detached contacts");
+
+            // Delete morph target (e.g. WarehouseListing)
+            if ($listing->listable && !$listing->listable->trashed()) {
+                Log::info("🔁 Deleting listable of type " . get_class($listing->listable));
+                $listing->listable->delete();
+            }
+
+            self::$deletionGuard = false;
         });
     }
 }

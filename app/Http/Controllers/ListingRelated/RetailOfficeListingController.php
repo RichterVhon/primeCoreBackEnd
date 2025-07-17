@@ -145,6 +145,25 @@ class RetailOfficeListingController extends Controller
         ], 201);
     }
 
+    public function destroy($id): JsonResponse
+    {
+        $retailoffice = RetailOfficeListing::with([
+            'listing',
+            'retailOfficeTurnoverConditions',
+            'retailOfficeListingPropertyDetails',
+            'retailOfficeBuildingSpecs',
+            'retailOfficeOtherDetailExtn'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($retailoffice) {
+            $retailoffice->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Retail office listing and related data successfully soft deleted.'
+        ]);
+    }
+
 
 
 }

@@ -32,6 +32,7 @@ return new class extends Migration
             $table->date('escalation_effectivity')->nullable(); // Can be enum later on
             $table->text('remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

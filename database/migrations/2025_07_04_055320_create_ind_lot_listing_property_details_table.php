@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('zoning_classification')->nullable();
             $table->string('offering')->nullable(); // can be enum later on in the project
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

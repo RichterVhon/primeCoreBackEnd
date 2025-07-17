@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-class IndLotLeaseRates extends Model
-{
+class IndLotLeaseRates extends Model {
+    use SoftDeletes;
     use HasFactory;
     protected $fillable = [
         'ind_lot_listing_id',
