@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\HandlesListingCreation;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Requests\StoreOfficeSpaceListingRequest;
+use App\Http\Requests\UpdateOfficeSpaceListingRequest;
 
 class OfficeSpaceListingController extends Controller
 {
@@ -60,6 +61,27 @@ class OfficeSpaceListingController extends Controller
     }
 
     use HandlesListingCreation;
+
+    public function show($id): JsonResponse
+    {
+        $Office = OfficeSpaceListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.contacts',
+            'listing.leaseDocument',
+            'listing.inquiries',
+            'listing.otherDetail',
+            'listing.leaseTermsAndConditions',
+
+            'OfficeListingPropertyDetails',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeOtherDetailExtn',
+        ])->findOrFail($id);
+
+        return response()->json(['data' => $Office]);
+    }
 
     public function store(StoreOfficeSpaceListingRequest $request): JsonResponse
     {
@@ -116,42 +138,66 @@ class OfficeSpaceListingController extends Controller
         ], 201);
     }
 
-    public function show($id): JsonResponse
+    public function update(UpdateOfficeSpaceListingRequest $request, $id): JsonResponse
     {
-        $Office = OfficeSpaceListing::withTrashed()->with([
-            'listing.account',
-            'listing.location',
-            'listing.contacts',
-            'listing.leaseDocument',
-            'listing.inquiries',
-            'listing.otherDetail',
-            'listing.leaseTermsAndConditions',
-
+        $Office = OfficeSpaceListing::with([
+            'listing',
             'OfficeListingPropertyDetails',
             'OfficeTurnoverConditions',
             'OfficeSpecs',
             'OfficeLeaseTermsAndConditionsExtn',
             'OfficeOtherDetailExtn',
-        ])->find($id);
+        ])->findOrFail($id);
 
-        if ($Office->trashed()) {
-            return response()->json([
-                'message' => "Office Space Listing with ID {$id} has been deleted."
-            ], 410); // 410 Gone is semantically accurate
-        }
-        
-        if (!$Office) {
-            return response()->json([
-                'message' => "Office Listing with ID {$id} does not exist."
-            ]);
-        }
+        $data = $request->validated();
 
-        return response()->json(['data' => $Office]);
+        DB::transaction(function () use ($Office, $data) {
+
+            // Update the already existing listing fields
+            $this->updateListing($Office->listing, $data['listing'] ?? []);
+
+            // Update for its components
+            $this->updateListingComponents($Office->listing, $data['listing'] ?? []);
+
+            // Update Office components
+            $Office->officeSpecs()->update($data['office_specs'] ?? []);
+            $Office->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
+            $Office->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
+            $Office->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
+            $Office->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
+
+
+            // $Office->officespaceListingPropDetails()->update($data['officespace_listing_prop_details'] ?? []);
+            // $Office->officespaceTurnoverConditions()->update($data['officespace_turnover_conditions'] ?? []);
+            // $Office->officespaceSpecs()->update($data['officespace_specs'] ?? []);
+            // $Office->officespaceLeaseRate()->update($data['officespace_lease_rates'] ?? []);
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = officespaceListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'officeSpecs',
+            'officeTurnoverConditions',
+            'officeListingPropertyDetails',
+            'officeOtherDetailExtn',
+            'officeLeaseTermsAndConditionsExtn',
+        ])->findOrFail($Office->id);
+
+        return response()->json([
+            'message' => 'Office listing successfully updated.',
+            'data' => $updated
+        ], 201);
     }
 
     public function destroy($id): JsonResponse
     {
-        $officespace = OfficeSpaceListing::with([
+        $Office = OfficeSpaceListing::with([
             'listing',
             'OfficeLeaseTermsAndConditionsExtn',
             'OfficeTurnoverConditions',
@@ -160,8 +206,8 @@ class OfficeSpaceListingController extends Controller
             'OfficeListingPropertyDetails'
         ])->findOrFail($id);
 
-        DB::transaction(function () use ($officespace) {
-            $officespace->delete(); // triggers soft deletes via model event
+        DB::transaction(function () use ($Office) {
+            $Office->delete(); // triggers soft deletes via model event
         });
 
         return response()->json([
@@ -171,7 +217,7 @@ class OfficeSpaceListingController extends Controller
 
     public function restore($id): JsonResponse
     {
-        $officespace = OfficeSpaceListing::withTrashed()->with([
+        $Office = OfficeSpaceListing::withTrashed()->with([
             'listing',
             'OfficeLeaseTermsAndConditionsExtn',
             'OfficeTurnoverConditions',
@@ -180,15 +226,15 @@ class OfficeSpaceListingController extends Controller
             'OfficeListingPropertyDetails'
         ])->findOrFail($id);
 
-        if (!$officespace->trashed()) {
+        if (!$Office->trashed()) {
             return response()->json([
                 'message' => 'Office Space listing is not deleted and cannot be restored.'
             ], 400);
         }
 
 
-        DB::transaction(function () use ($officespace) {
-            $officespace->restoreCascade();
+        DB::transaction(function () use ($Office) {
+            $Office->restoreCascade();
         });
 
         return response()->json([

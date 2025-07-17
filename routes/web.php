@@ -8,7 +8,7 @@ use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
 use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
-use App\Models\ListingRelated\OfficeSpaceListing;
+use App\Models\ListingRelated\RetailOfficeListing;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
@@ -26,7 +26,9 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::post('/commlot', [CommLotListingController::class, 'store'])->name('listings.commlot.store');
     Route::post('/retailoffice', [RetailOfficeListingController::class,'store'])->name('listings.retailoffice.store');
 
+    Route::put('/officespace/{id}', [OfficeSpaceListingController::class, 'update'])->name('listings.officespace.update');
     Route::put('/warehouse/{id}', [WarehouseListingController::class, 'update'])->name('listings.warehouse.update');
+    Route::put('/retailoffice/{id}', [RetailOfficeListingController::class, 'update'])->name('listings.retailofficespace.update');
     Route::put('/indlot/{id}', [IndLotListingController::class, 'update'])->name('listings.indlot.update');
 
     Route::post('{id}/restore', [ListingController::class, 'restore'])->name('listings.restore');
@@ -38,6 +40,7 @@ Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
     Route::get('/', [WarehouseListingController::class, 'index'])->name('warehouse.index');
     Route::get('/{id}', [WarehouseListingController::class, 'show'])->name('warehouse.show');
     Route::post('/', [WarehouseListingController::class, 'store'])->name('warehouse.store');
+    Route::put('/{id}', [WarehouseListingController::class, 'update'])->name('warehouse.update');
     Route::delete('/{id}', [WarehouseListingController::class, 'destroy'])->name('warehouse.destroy');
     Route::post('/{id}/restore', [WarehouseListingController::class, 'restore'])->name('warehouse.restore');
 });
@@ -65,6 +68,7 @@ Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [RetailOfficeListingController::class, 'index']);
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
     Route::post('/', [RetailOfficeListingController::class,'store'])->name('retailoffice.store');
+    Route::put('/{id}', [RetailOfficeListingController::class, 'update'])->name('retailoffice.update');
     Route::delete('/{id}', [RetailOfficeListingController::class, 'destroy'])->name('retailoffice.destroy');
     Route::post('/{id}/restore', [RetailOfficeListingController::class, 'restore'])->name('retailoffice.restore');
 });
@@ -74,6 +78,7 @@ Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
     Route::get('/', [OfficeSpaceListingController::class, 'index']);
     Route::get('/{id}', [OfficeSpaceListingController::class, 'show']);
     Route::post('/', [OfficeSpaceListingController::class, 'store'])->name('officespace.store');
+    Route::put('/{id}', [OfficeSpaceListingController::class, 'update'])->name('officespace.update');
     Route::delete('/{id}', [OfficeSpaceListingController::class, 'destroy'])->name('officespace.destroy');
     Route::post('{id}/restore', [OfficeSpaceListingController::class, 'restore'])->name('officespace.restore');
 });
