@@ -15,15 +15,15 @@ use App\Http\Requests\StoreRetailOfficeListingRequest;
 
 class RetailOfficeListingController extends Controller
 {
-  public function index(Request $request): JsonResponse
-    {   
+    public function index(Request $request): JsonResponse
+    {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
             return response()->json([
                 'message' => 'Forbidden: Agents or Admin only'
             ], Response::HTTP_FORBIDDEN);
         }
-        
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -53,7 +53,7 @@ class RetailOfficeListingController extends Controller
                 'RetailOfficeTurnoverConditions',
                 'RetailOfficeBuildingSpecs',
                 'RetailOfficeOtherDetailExtn',
-    
+
             ])
             ->paginate(10)
             ->appends($request->query());
@@ -73,7 +73,7 @@ class RetailOfficeListingController extends Controller
 
     public function show($id): JsonResponse
     {
-        $retailoffice = RetailOfficeListing::with([
+        $retailoffice = RetailOfficeListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -86,8 +86,20 @@ class RetailOfficeListingController extends Controller
             'RetailOfficeTurnoverConditions',
             'RetailOfficeBuildingSpecs',
             'RetailOfficeOtherDetailExtn',
+
+        ])->find($id);
+
+        if ($retailoffice->trashed()) {
+            return response()->json([
+                'message' => "Retail Office Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
         
-        ])->findOrFail($id);
+        if (!$retailoffice) {
+            return response()->json([
+                'message' => "Retail Office Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $retailoffice]);
     }
@@ -116,7 +128,7 @@ class RetailOfficeListingController extends Controller
             $retailOffice->retailOfficeTurnoverConditions()->create($data['retail_office_turnover_conditions'] ?? []);
             $retailOffice->retailOfficeBuildingSpecs()->create($data['retail_office_building_specs'] ?? []);
             $retailOffice->retailOfficeOtherDetailExtn()->create(
-    array_merge(
+                array_merge(
                     $data['retail_office_other_detail_extn'] ?? [],
                     ['other_detail_id' => $otherDetail->id]
                 )
@@ -163,6 +175,32 @@ class RetailOfficeListingController extends Controller
             'message' => 'Retail office listing and related data successfully soft deleted.'
         ]);
     }
+
+    public function restore($id): JsonResponse
+    {
+        $retailoffice = RetailOfficeListing::withTrashed()->with([
+            'listing',
+            'retailOfficeTurnoverConditions',
+            'retailOfficeListingPropertyDetails',
+            'retailOfficeBuildingSpecs',
+            'retailOfficeOtherDetailExtn',
+        ])->findOrFail($id);
+
+        if (!$retailoffice->trashed()) {
+            return response()->json([
+                'message' => 'Retail office listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($retailoffice) {
+            $retailoffice->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Retail office listing and related data successfully restored.'
+        ]);
+    }
+
 
 
 

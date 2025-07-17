@@ -97,7 +97,8 @@ class Listing extends Model
         return $this->belongsToMany(\App\Models\Contact::class)
             ->using(\App\Models\ContactListing::class)
             ->withTimestamps()
-            ->withPivot('company')->withTrashed();
+            ->withPivot('company', 'deleted_at') // include deleted_at for clarity
+            ->withTrashed(); // ensures soft-deleted pivot rows are accessible
     }
 
     public function account(): BelongsTo
@@ -145,7 +146,9 @@ class Listing extends Model
             });
             Log::info("✔ Deleted inquiries");
 
-            $listing->contacts()->detach();
+            $listing->contacts()->each(function ($contact) use ($listing) {
+                $listing->contacts()->updateExistingPivot($contact->id, ['deleted_at' => now()]);
+            });
             Log::info("✔ Detached contacts");
 
             // Delete morph target (e.g. WarehouseListing)
@@ -157,4 +160,39 @@ class Listing extends Model
             self::$deletionGuard = false;
         });
     }
+
+    protected static bool $restorationGuard = false;
+
+    public function restoreCascade(): void
+    {
+        if (self::$restorationGuard) {
+            Log::info("🛑 Skipping Listing restoration due to guard");
+            return;
+        }
+
+        Log::info("🔄 Restoring Listing ID {$this->id}");
+        self::$restorationGuard = true;
+
+        $this->restore();
+
+        $this->location?->restore();
+        $this->leaseDocument?->restore();
+        $this->leaseTermsAndConditions?->restore();
+        $this->otherDetail?->restore();
+        $this->inquiries()->withTrashed()->get()->each->restore();
+
+
+        // Restore soft-deleted pivot rows for contacts
+        $this->contacts()->withTrashed()->get()->each(function ($contact) {
+            $this->contacts()->updateExistingPivot($contact->id, ['deleted_at' => null]);
+        });
+
+        // Restore polymorphic listable
+        if ($this->listable && $this->listable->trashed()) {
+            $this->listable->restoreCascade();
+        }
+
+        self::$restorationGuard = false;
+    }
+
 }

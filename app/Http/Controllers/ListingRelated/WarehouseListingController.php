@@ -76,7 +76,7 @@ class WarehouseListingController extends Controller
 
     public function show($id): JsonResponse
     {
-        $warehouse = WarehouseListing::with([
+        $warehouse = WarehouseListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -89,7 +89,19 @@ class WarehouseListingController extends Controller
             'warehouseTurnoverConditions',
             'warehouseSpecs',
             'warehouseLeaseRate'
-        ])->findOrFail($id);
+        ])->find($id);
+
+        if ($warehouse->trashed()) {
+            return response()->json([
+                'message' => "Warehouse Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+        
+        if (!$warehouse) {
+            return response()->json([
+                'message' => "Warehouse Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $warehouse]);
     }
@@ -212,6 +224,32 @@ class WarehouseListingController extends Controller
 
         return response()->json([
             'message' => 'Warehouse listing and related data successfully soft deleted.'
+        ]);
+    }
+
+    public function restore($id): JsonResponse
+    {
+        $warehouse = WarehouseListing::withTrashed()->with([
+            'listing',
+            'warehouseSpecs',
+            'warehouseLeaseRate',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions'
+        ])->findOrFail($id);
+
+        if (!$warehouse->trashed()) {
+            return response()->json([
+                'message' => 'Warehouse listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+
+        DB::transaction(function () use ($warehouse) {
+            $warehouse->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Warehouse listing and related data successfully restored.'
         ]);
     }
 

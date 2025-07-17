@@ -118,7 +118,7 @@ class OfficeSpaceListingController extends Controller
 
     public function show($id): JsonResponse
     {
-        $Office = OfficeSpaceListing::with([
+        $Office = OfficeSpaceListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -132,7 +132,19 @@ class OfficeSpaceListingController extends Controller
             'OfficeSpecs',
             'OfficeLeaseTermsAndConditionsExtn',
             'OfficeOtherDetailExtn',
-        ])->findOrFail($id);
+        ])->find($id);
+
+        if ($Office->trashed()) {
+            return response()->json([
+                'message' => "Office Space Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+        
+        if (!$Office) {
+            return response()->json([
+                'message' => "Office Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $Office]);
     }
@@ -156,5 +168,33 @@ class OfficeSpaceListingController extends Controller
             'message' => 'Office space listing and related data successfully soft deleted.'
         ]);
     }
+
+    public function restore($id): JsonResponse
+    {
+        $officespace = OfficeSpaceListing::withTrashed()->with([
+            'listing',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeOtherDetailExtn',
+            'OfficeListingPropertyDetails'
+        ])->findOrFail($id);
+
+        if (!$officespace->trashed()) {
+            return response()->json([
+                'message' => 'Office Space listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+
+        DB::transaction(function () use ($officespace) {
+            $officespace->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Office space listing and related data successfully restored.'
+        ]);
+    }
+
 
 }
