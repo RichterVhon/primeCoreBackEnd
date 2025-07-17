@@ -47,21 +47,69 @@ class Listing extends Model
     public static function searchableFields(): array
     {
         return [
+            // Listing fields
             'project_name',
             'property_name',
             'bd_incharge',
             'authority_type',
             'listable_type',
             'custom_listable_id',
-            // 'account.email',
-            // 'category.name'
+
+            // Location
+            'location.province',
+            'location.city',
+            'location.district',
+            'location.exact_address',
+
+            // Lease Terms
+            'leaseTermsAndConditions.remarks',
+
+            // Contacts (via pivot)
+            'contacts.contact_person',
+            'contacts.position',
+            'contacts.email_address',
+            'contacts.contact_number',
+            'contacts.company',
         ];
     }
 
+
     public static function filterableFields(): array
     {
-        return ['status', 'date_uploaded', 'date_last_updated', 'otherDetail_electricity_meter', 'otherDetail_water_meter', 'location_province'];
+        return [
+            // Listing fields
+            'status',
+            'date_uploaded',
+            'date_last_updated',
+
+            // Location
+            'location_province',
+            'location_city',
+            'location_district',
+
+            // Other Details
+            'otherDetail_electricity_meter',
+            'otherDetail_water_meter',
+            'otherDetail_year_built',
+
+            // Lease Terms
+            'leaseTermsAndConditions_monthly_rate',
+            'leaseTermsAndConditions_cusa_sqm',
+            'leaseTermsAndConditions_security_deposit',
+            'leaseTermsAndConditions_advance_rental',
+            'leaseTermsAndConditions_application_of_advance',
+            'leaseTermsAndConditions_min_lease',
+            'leaseTermsAndConditions_max_lease',
+            'leaseTermsAndConditions_escalation_rate',
+            'leaseTermsAndConditions_escalation_frequency',
+            'leaseTermsAndConditions_escalation_effectivity',
+
+            // Contacts (via pivot)
+            'contacts_position',
+            'contacts_company',
+        ];
     }
+
 
 
     public function location(): HasOne
