@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('custom_id')->unique()->nullable();
             $table->string('PEZA_accredited'); 
             $table->timestamps();   
+        $table->softDeletes();
         });
     }
 

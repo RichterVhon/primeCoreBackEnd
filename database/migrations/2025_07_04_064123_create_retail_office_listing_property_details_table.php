@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('unit_number')->nullable();
             $table->float('leasable_size')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

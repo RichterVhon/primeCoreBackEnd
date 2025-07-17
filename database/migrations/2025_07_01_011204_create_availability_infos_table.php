@@ -23,6 +23,7 @@ return new class extends Migration
             $table->date('date_of_availability'); // date
             $table->text('date_of_availability_remarks')->nullable(); // text, can be null
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

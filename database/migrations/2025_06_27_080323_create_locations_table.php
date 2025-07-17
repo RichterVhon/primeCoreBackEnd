@@ -27,6 +27,7 @@ return new class extends Migration
             $table->decimal('google_coordinates_longitude', 11, 8);
             $table->string('exact_address');
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

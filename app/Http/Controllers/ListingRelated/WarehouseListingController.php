@@ -196,5 +196,25 @@ class WarehouseListingController extends Controller
         ], 201);
     }
 
+    public function destroy($id): JsonResponse
+    {
+        $warehouse = WarehouseListing::with([
+            'listing',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($warehouse) {
+            $warehouse->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Warehouse listing and related data successfully soft deleted.'
+        ]);
+    }
+
+
 }
 

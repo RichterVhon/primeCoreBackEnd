@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class OfficeListingPropertyDetails extends Model
-{
+class OfficeListingPropertyDetails extends Model {
+    use SoftDeletes;
     use HasFactory;
 
     protected $fillable = [

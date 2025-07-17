@@ -146,6 +146,27 @@ class RetailOfficeListingController extends Controller
         ], 201);
     }
 
+
+    public function destroy($id): JsonResponse
+    {
+        $retailoffice = RetailOfficeListing::with([
+            'listing',
+            'retailOfficeTurnoverConditions',
+            'retailOfficeListingPropertyDetails',
+            'retailOfficeBuildingSpecs',
+            'retailOfficeOtherDetailExtn'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($retailoffice) {
+            $retailoffice->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Retail office listing and related data successfully soft deleted.'
+        ]);
+    }
+
+
     public function update(UpdateRetailOfficeListingRequest $request, $id): JsonResponse
     {
         $retailoffice = RetailOfficeListing::with([
@@ -172,12 +193,6 @@ class RetailOfficeListingController extends Controller
             $retailoffice->retailOfficeBuildingSpecs()->update($data['retail_office_building_specs'] ?? []);
             $retailoffice->retailOfficeOtherDetailExtn()->update($data['retail_office_other_detail_extn'] ?? []);
 
-                // $retailoffice->officeSpecs()->update($data['office_specs'] ?? []);
-                // $retailoffice->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
-                // $retailoffice->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
-                // $retailoffice->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
-                // $retailoffice->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
-
         });
 
         // 🧾 Return fully refreshed listing with all relationships
@@ -200,6 +215,4 @@ class RetailOfficeListingController extends Controller
             'data' => $updated
         ], 201);
     }
-
-
 }

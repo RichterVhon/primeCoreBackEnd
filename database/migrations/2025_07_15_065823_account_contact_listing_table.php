@@ -21,6 +21,7 @@ return new class extends Migration
             //$table->string('relationship_type')->nullable(); // e.g., 'client', 'partner'
 
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

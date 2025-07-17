@@ -20,6 +20,7 @@ return new class extends Migration
             //$table->string('company_name')->nullable(); // Commented out because the company name will be stored in the pivot table, as a contact can be represented by multiple companies.
             //listing reference is in pivot table, wala here
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

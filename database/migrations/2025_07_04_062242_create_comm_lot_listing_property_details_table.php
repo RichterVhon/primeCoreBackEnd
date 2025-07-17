@@ -26,6 +26,7 @@ return new class extends Migration
             $table->float('depth')->nullable();
             $table->string('zoning_classification')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

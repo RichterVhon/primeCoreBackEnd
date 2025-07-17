@@ -194,4 +194,25 @@ class OfficeSpaceListingController extends Controller
             'data' => $updated
         ], 201);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $officespace = OfficeSpaceListing::with([
+            'listing',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeOtherDetailExtn',
+            'OfficeListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($officespace) {
+            $officespace->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Office space listing and related data successfully soft deleted.'
+        ]);
+    }
+
 }

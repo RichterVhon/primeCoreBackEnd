@@ -1,16 +1,18 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use App\Traits\HasSearch;
 
 use App\Traits\HasCustomId;
-use App\Traits\HasSearch;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class CommLotListing extends Model
-{
+class CommLotListing extends Model {
+    use SoftDeletes;
     use HasFactory;
     use HasCustomId;
     use HasSearch;
@@ -55,6 +57,36 @@ class CommLotListing extends Model
     public function commLotListingPropertyDetails(): HasOne
     {
         return $this->hasOne(\App\Models\ListingRelated\CommLotListingPropertyDetails::class, 'comm_lot_listing_id');
-    }   
+    }
+    
+    protected static bool $deletionGuard = false;
+
+    protected static function booted()
+    {
+        static::deleting(function ($commlot) {
+            if (self::$deletionGuard) {
+                Log::info("🛑 Skipping CommLot deletion due to guard");
+                return;
+            }
+
+            Log::info("⛔ Deleting CommLotListing ID {$commlot->id}");
+            self::$deletionGuard = true;
+
+            // Delete CommLot components
+            $commlot->commLotTurnoverConditions?->delete();
+            Log::info("✔ Deleted commLotTurnoverConditions");
+
+            $commlot->commLotListingPropertyDetails?->delete();
+            Log::info("✔ Deleted commLotListingPropertyDetails");
+
+            // Delete associated Listing
+            if ($commlot->listing && !$commlot->listing->trashed()) {
+                Log::info("🔁 Deleting linked Listing ID {$commlot->listing->id}");
+                $commlot->listing->delete();
+            }
+
+            self::$deletionGuard = false;
+        });
+    }
 }
 

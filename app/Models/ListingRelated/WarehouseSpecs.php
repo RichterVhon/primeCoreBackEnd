@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\ElectricalLoadCapacity;
 use App\Enums\LoadingBayVehicularCapacity;
@@ -11,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class WarehouseSpecs extends Model
-{
+class WarehouseSpecs extends Model {
+    use SoftDeletes;
     use HasFactory;
 
 

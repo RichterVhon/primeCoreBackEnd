@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('custom_id')->unique()->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('role')->default('viewer'); // can be 'user', 'admin', etc.
             $table->boolean('status')->default(true);
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

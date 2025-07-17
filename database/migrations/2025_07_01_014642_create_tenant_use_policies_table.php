@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('tenant_restrictions')->nullable(); // text, can be null
             $table->text('ideal_use')->nullable(); // text, can be null
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

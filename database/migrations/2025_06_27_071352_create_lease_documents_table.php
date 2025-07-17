@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('photos_and_property_documents_link')->nullable();
             $table->string('professional_fee_structure')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

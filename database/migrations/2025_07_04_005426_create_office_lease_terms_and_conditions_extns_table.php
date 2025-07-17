@@ -34,6 +34,7 @@ return new class extends Migration
             $table->decimal('parking_rate_slot', 10, 2);
             $table->integer('parking_allotment')->default(0); 
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

@@ -18,6 +18,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
+    Route::delete('/{id}', [ListingController::class, 'destroy'])->name('listings.destroy');
 
     Route::post('/warehouse', [WarehouseListingController::class, 'store'])->name('listings.warehouse.store');
     Route::post('/officespace', [OfficeSpaceListingController::class, 'store'])->name('listings.officespace.store');
@@ -39,6 +40,7 @@ Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [WarehouseListingController::class, 'show'])->name('warehouse.show');
     Route::post('/', [WarehouseListingController::class, 'store'])->name('warehouse.store');
     Route::put('/{id}', [WarehouseListingController::class, 'update'])->name('warehouse.update');
+    Route::delete('/{id}', [WarehouseListingController::class, 'destroy'])->name('warehouse.destroy');
 });
 
 // Group for IndLots=specific listings
@@ -46,7 +48,7 @@ Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [IndLotListingController::class, 'index']);
     Route::get('/{id}', [IndLotListingController::class, 'show']);
     Route::post('/', [IndLotListingController::class, 'store'])->name('indlot.store');
-
+    Route::delete('/{id}', [IndLotListingController::class, 'destroy'])->name('indlot.destroy');
 });
 
 //Group for CommLot-specific listings
@@ -54,8 +56,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [CommLotListingController::class, 'index']);
     Route::get('/{id}', [CommLotListingController::class, 'show']);
     Route::post('/', [CommLotListingController::class, 'store'])->name('commlot.store');
-    
-    
+    Route::delete('/{id}', [CommLotListingController::class, 'destroy'])->name('commlot.destroy');
 });
 
 //Group for retail-specific listings
@@ -64,6 +65,7 @@ Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [RetailOfficeListingController::class, 'show']);
     Route::post('/', [RetailOfficeListingController::class,'store'])->name('retailoffice.store');
     Route::put('/{id}', [RetailOfficeListingController::class, 'update'])->name('retailoffice.update');
+    Route::delete('/{id}', [RetailOfficeListingController::class, 'destroy'])->name('retailoffice.destroy');
 });
 
 // Group for office-specific listings
@@ -72,6 +74,7 @@ Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [OfficeSpaceListingController::class, 'show']);
     Route::post('/', [OfficeSpaceListingController::class, 'store'])->name('officespace.store');
     Route::put('/{id}', [OfficeSpaceListingController::class, 'update'])->name('officespace.update');
+    Route::delete('/{id}', [OfficeSpaceListingController::class, 'destroy'])->name('officespace.destroy');
 });
 
 
