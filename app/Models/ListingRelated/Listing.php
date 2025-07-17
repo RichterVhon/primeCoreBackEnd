@@ -60,7 +60,7 @@ class Listing extends Model
 
     public static function filterableFields(): array
     {
-        return ['status', 'date_uploaded', 'date_last_updated'];
+        return ['status', 'date_uploaded', 'date_last_updated', 'otherDetail_electricity_meter', 'otherDetail_water_meter', 'location_province'];
     }
 
 
