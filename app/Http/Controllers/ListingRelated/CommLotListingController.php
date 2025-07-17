@@ -13,6 +13,7 @@ use App\Models\ListingRelated\IndLotListing;
 use App\Models\ListingRelated\CommLotListing;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\StoreCommLotListingRequest;
+use App\Http\Requests\UpdateCommLotListingRequest;
 
 class CommLotListingController extends Controller
 {
@@ -152,7 +153,57 @@ class CommLotListingController extends Controller
         return response()->json([
             'message' => 'Commercial Lot listing and related data successfully soft deleted.'
         ]);
+
+public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
+    {
+        $commlot = CommLotListing::with([
+            'listing',
+            'commlotListingPropertyDetails',
+            'commlotTurnoverConditions'
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($commlot, $data) {
+            // 🧱 Update commlot morph record
+            $commlot->update([
+                'PEZA_accredited' => $data['PEZA_accredited'] ?? $commlot->PEZA_accredited,
+            ]);
+
+            // 🧍 Update shared listing fields
+            $this->updateListing($commlot->listing, $data['listing'] ?? []);
+
+            // 🔄 Update listing components
+            $this->updateListingComponents($commlot->listing, $data['listing'] ?? []);
+
+            // ⚙️ Update listing components
+            $commlot->CommLotListingPropertyDetails()->update($data['comm_lot_listing_property_details'] ?? []);
+            $commlot->CommLotTurnoverConditions()->update($data['comm_lot_turnover_conditions'] ?? []);
+            return $commlot;
+        });
+
+        // 🧾 Return fully refreshed listing with all relationships
+        $updated = CommLotListing::with([
+           'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'commlotListingPropertyDetails',
+            'commlotTurnoverConditions'
+        
+        ])->findOrFail($commlot->id);
+
+        return response()->json([
+            'message' => 'Commercial Lot listing successfully updated.',
+            'data' => $updated
+        ], 201);
     }
 
 }
+
+
+
 
