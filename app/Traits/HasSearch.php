@@ -30,35 +30,36 @@ trait HasSearch
             ->toArray();
 
         foreach ($filters as $key => $value) {
-            if (!is_null($value)) {
-                if (str_contains($key, '_')) {
-                    $segments = explode('_', $key);
-                    $relation = array_shift($segments);
-                    $field = implode('_', $segments);
-
-                    if (in_array($relation, $relationMethods)) {
-                        //dump("→ whereHas: {$relation}, field: {$field}, value: {$value}");
-
-                        $query->whereHas($relation, function ($q) use ($field, $value) {
-                            //dump("→ SQL inside whereHas: {$field} = {$value}");
-                            $q->where($field, '=', $value);
-                        });
-
-                        continue;
-                    }
+            if (is_array($value)) {
+                if (isset($value['from'])) {
+                    $this->applyFilter($query, $key, '>=', $value['from'], $relationMethods);
                 }
-
-                //dump("→ direct where: {$key} = {$value}");
-                $query->where($key, '=', $value);
+                if (isset($value['to'])) {
+                    $this->applyFilter($query, $key, '<=', $value['to'], $relationMethods);
+                }
+            } else {
+                $this->applyFilter($query, $key, '=', $value, $relationMethods);
             }
         }
 
         return $query;
     }
 
+    private function applyFilter(Builder $query, string $key, string $operator, mixed $value, array $relationMethods): void
+    {
+        if (str_contains($key, '_')) {
+            $segments = explode('_', $key);
+            $relation = array_shift($segments);
+            $field = implode('_', $segments);
 
+            if (in_array($relation, $relationMethods)) {
+                $query->whereHas($relation, function ($q) use ($field, $operator, $value) {
+                    $q->where($field, $operator, $value);
+                });
+                return;
+            }
+        }
 
-
-
-
+        $query->where($key, $operator, $value);
+    }
 }

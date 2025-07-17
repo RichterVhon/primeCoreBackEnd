@@ -53,7 +53,7 @@ class ListingController extends Controller
         //dd($query->toSql(), $query->getBindings());
 
         $listings = $query
-            ->with(['location', 'listable', 'inquiries', 'otherDetail'])
+            ->with(['location', 'leaseDocument', 'otherDetail', 'leaseTermsAndConditions', 'contacts', 'listable', 'inquiries'])
             ->paginate(10)
             ->appends($request->query());
 
