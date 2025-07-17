@@ -55,22 +55,22 @@ class IndLotListing extends Model
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {
-        return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable');
+        return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable')->withTrashed();
     }
 
     public function indLotLeaseRates(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\IndLotLeaseRates::class, 'ind_lot_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\IndLotLeaseRates::class, 'ind_lot_listing_id')->withTrashed();
     }
 
     public function indLotTurnoverConditions(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\IndLotTurnoverConditions::class, 'ind_lot_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\IndLotTurnoverConditions::class, 'ind_lot_listing_id')->withTrashed();
     }
 
     public function indLotListingPropertyDetails(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\IndLotListingPropertyDetails::class, 'ind_lot_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\IndLotListingPropertyDetails::class, 'ind_lot_listing_id')->withTrashed();
     }
     protected static bool $deletionGuard = false;
 
@@ -103,5 +103,36 @@ class IndLotListing extends Model
 
             self::$deletionGuard = false;
         });
+    }
+
+    protected static bool $restorationGuard = false;
+
+    public function restoreCascade(): void
+    {
+        if (self::$restorationGuard) {
+            Log::info("🛑 Skipping IndLotListing restoration due to guard");
+            return;
+        }
+
+        Log::info("🔄 Restoring IndLotListing ID {$this->id}");
+        self::$restorationGuard = true;
+
+        $this->restore();
+
+        $this->indLotLeaseRates?->restore();
+        Log::info("✔ Restored indLotLeaseRates");
+
+        $this->indLotTurnoverConditions?->restore();
+        Log::info("✔ Restored indLotTurnoverConditions");
+
+        $this->indLotListingPropertyDetails?->restore();
+        Log::info("✔ Restored indLotListingPropertyDetails");
+
+        if ($this->listing && $this->listing->trashed()) {
+            Log::info("🔁 Restoring linked Listing ID {$this->listing->id}");
+            $this->listing->restoreCascade(); // assumes Listing has restoreCascade()
+        }
+
+        self::$restorationGuard = false;
     }
 }

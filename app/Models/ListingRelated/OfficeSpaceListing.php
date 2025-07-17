@@ -13,8 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class OfficeSpaceListing extends Model
-{
+class OfficeSpaceListing extends Model {
     use SoftDeletes;
     use HasFactory;
     use HasSearch;
@@ -52,33 +51,33 @@ class OfficeSpaceListing extends Model
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {
-        return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable');
+        return $this->morphOne(\App\Models\ListingRelated\Listing::class, 'listable')->withTrashed();
     }
 
 
     public function OfficeLeaseTermsAndConditionsExtn(): HasOne
     {
-        return $this->hasOne(OfficeLeaseTermsAndConditionsExtn::class, 'office_space_listing_id');
+        return $this->hasOne(OfficeLeaseTermsAndConditionsExtn::class, 'office_space_listing_id')->withTrashed();
     }
 
     public function OfficeTurnoverConditions(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\OfficeTurnoverConditions::class, 'office_space_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\OfficeTurnoverConditions::class, 'office_space_listing_id')->withTrashed();
     }
 
     public function OfficeSpecs(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\OfficeSpecs::class, 'office_space_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\OfficeSpecs::class, 'office_space_listing_id')->withTrashed();
     }
 
     public function OfficeOtherDetailExtn(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\OfficeOtherDetailExtn::class, 'office_space_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\OfficeOtherDetailExtn::class, 'office_space_listing_id')->withTrashed();
     }
 
     public function OfficeListingPropertyDetails(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\OfficeListingPropertyDetails::class, 'office_space_listing_id');
+        return $this->hasOne(\App\Models\ListingRelated\OfficeListingPropertyDetails::class, 'office_space_listing_id')->withTrashed();
     }
 
     protected static bool $deletionGuard = false;
@@ -118,5 +117,41 @@ class OfficeSpaceListing extends Model
 
             self::$deletionGuard = false;
         });
+    }
+        protected static bool $restorationGuard = false;
+
+    public function restoreCascade(): void
+    {
+        if (self::$restorationGuard) {
+            Log::info("🛑 Skipping OfficeSpaceListing restoration due to guard");
+            return;
+        }
+
+        Log::info("🔄 Restoring OfficeSpaceListing ID {$this->id}");
+        self::$restorationGuard = true;
+
+        $this->restore();
+
+        $this->OfficeLeaseTermsAndConditionsExtn?->restore();
+        Log::info("✔ Restored OfficeLeaseTermsAndConditionsExtn");
+
+        $this->OfficeTurnoverConditions?->restore();
+        Log::info("✔ Restored OfficeTurnoverConditions");
+
+        $this->OfficeSpecs?->restore();
+        Log::info("✔ Restored OfficeSpecs");
+
+        $this->OfficeOtherDetailExtn?->restore();
+        Log::info("✔ Restored OfficeOtherDetailExtn");
+
+        $this->OfficeListingPropertyDetails?->restore();
+        Log::info("✔ Restored OfficeListingPropertyDetails");
+
+        if ($this->listing && $this->listing->trashed()) {
+            Log::info("🔁 Restoring linked Listing ID {$this->listing->id}");
+            $this->listing->restoreCascade(); // assumes Listing has restoreCascade()
+        }
+
+        self::$restorationGuard = false;
     }
 }

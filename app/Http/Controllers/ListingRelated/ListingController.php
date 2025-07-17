@@ -64,7 +64,7 @@ class ListingController extends Controller
             ], Response::HTTP_FORBIDDEN);
         }
 
-        $listing = Listing::with([
+        $listing = Listing::withTrashed()->with([
             'account',
             'location',
             'leaseDocument',
@@ -73,7 +73,20 @@ class ListingController extends Controller
             'contacts',
             'inquiries',
             'listable',
-        ])->findOrFail($id);
+        ])->find($id);
+
+        if ($listing->trashed()) {
+            return response()->json([
+                'message' => "Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+
+        if (!$listing) {
+            return response()->json([
+                'message' => "Listing with ID {$id} does not exist."
+            ]);
+        }
+
 
 
         /* alternative way
@@ -129,4 +142,30 @@ class ListingController extends Controller
         ]);
     }
 
+    public function restore($id): JsonResponse
+    {
+        $listing = Listing::withTrashed()->with([
+            'location',
+            'leaseDocument',
+            'leaseTermsAndConditions',
+            'otherDetail',
+            'inquiries',
+            'contacts',
+            'listable'
+        ])->findOrFail($id);
+
+        if (!$listing->trashed()) {
+            return response()->json([
+                'message' => 'Listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($listing) {
+            $listing->restoreCascade(); // assumes Listing model has restoreCascade()
+        });
+
+        return response()->json([
+            'message' => 'Listing and related data successfully restored.'
+        ]);
+    }
 }

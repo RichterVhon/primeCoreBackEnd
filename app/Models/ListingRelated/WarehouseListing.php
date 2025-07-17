@@ -60,22 +60,22 @@ class WarehouseListing extends Model
 
     public function warehouseListingPropDetails(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\WarehouseListingPropDetails::class);
+        return $this->hasOne(\App\Models\ListingRelated\WarehouseListingPropDetails::class)->withTrashed();
     }
 
     public function warehouseTurnoverConditions(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\WarehouseTurnoverConditions::class);
+        return $this->hasOne(\App\Models\ListingRelated\WarehouseTurnoverConditions::class)->withTrashed();
     }
 
     public function warehouseSpecs(): HasOne
     {
-        return $this->hasOne(\App\Models\ListingRelated\WarehouseSpecs::class);
+        return $this->hasOne(\App\Models\ListingRelated\WarehouseSpecs::class)->withTrashed();
     }
 
     public function warehouseLeaseRate(): HasOne
     {
-        return $this->hasOne(WarehouseLeaseRates::class);
+        return $this->hasOne(WarehouseLeaseRates::class)->withTrashed();
     }
 
     protected static bool $deletionGuard = false;
@@ -113,5 +113,32 @@ class WarehouseListing extends Model
             self::$deletionGuard = false;
         });
     }
+
+    protected static bool $restorationGuard = false;
+
+    public function restoreCascade(): void
+    {
+        if (self::$restorationGuard) {
+            Log::info("🛑 Skipping WarehouseListing restoration due to guard");
+            return;
+        }
+
+        Log::info("🔄 Restoring WarehouseListing ID {$this->id}");
+        self::$restorationGuard = true;
+
+        $this->restore();
+
+        $this->warehouseSpecs?->restore();
+        $this->warehouseLeaseRate?->restore();
+        $this->warehouseListingPropDetails?->restore();
+        $this->warehouseTurnoverConditions?->restore();
+
+        if ($this->listing && $this->listing->trashed()) {
+            $this->listing->restoreCascade();
+        }
+
+        self::$restorationGuard = false;
+    }
+
 
 }
