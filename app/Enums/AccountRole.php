@@ -6,5 +6,6 @@ enum AccountRole: string
 {
     case Admin = 'admin';
     case Agent = 'agent';
-    case Viewer = 'viewer';
+    //case Viewer = 'viewer';
+    case Client = 'client';
 }

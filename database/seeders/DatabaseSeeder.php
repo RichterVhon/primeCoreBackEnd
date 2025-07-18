@@ -101,11 +101,11 @@ class DatabaseSeeder extends Seeder
 
         $offices = OfficeSpaceListing::factory()
             ->has(OfficeSpecs::factory())
-            ->has(OfficeTurnoverConditions::factory()) 
-            ->has(OfficeListingPropertyDetails::factory()) 
+            ->has(OfficeTurnoverConditions::factory())
+            ->has(OfficeListingPropertyDetails::factory())
             //->has(OfficeLeaseTermsAndConditionsExtn::factory()) 
             //->has(OfficeOtherDetailExtn::factory())
-            ->count(10) 
+            ->count(10)
             ->create();
 
         $indlots->each(fn($item) => Listing::factory()->create([
@@ -165,19 +165,24 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        $viewerAccounts = Account::factory()
+        $clientAccounts = Account::factory()
             ->count(8)
-            ->state(['role' => 'viewer'])
+            ->state(['role' => 'client'])
             ->create();
 
-        Listing::all()->each(function ($listing) use ($viewerAccounts) {
+        Listing::all()->each(function ($listing) use ($clientAccounts, $agentAccounts) {
 
-            $assignedViewers = $viewerAccounts->random(rand(1, 2));
-            foreach ($assignedViewers as $viewer) {
+            $assignedClients = $clientAccounts->random(rand(1, 2));
+
+            foreach ($assignedClients as $client) {
                 Inquiry::factory()->create([
-                    'account_id' => $viewer->id,
+                    'agent_id' => $agentAccounts->random()->id,
+                    'client_id' => $client->id,
                     'listing_id' => $listing->id,
+                    'status' => fake()->randomElement(['pending', 'responded', 'archived']),
                     'message' => fake()->sentence(),
+                    'viewing_schedule' => fake()->optional()->dateTimeBetween('now', '+1 month'),
+                    //'agent_in_charge' => $listing->account->name ?? 'Unknown Agent',
                 ]);
             }
             // Attach an OtherDetail
@@ -210,31 +215,30 @@ class DatabaseSeeder extends Seeder
         });
 
         Listing::with(['otherDetail', 'leaseTermsAndConditions'])->get()->each(function ($listing) {        // ✅ Get existing OtherDetail already linked to this listing
-        $otherDetail = $listing->otherDetail;
-        $leaseTerms = $listing->leaseTermsAndConditions;
-        // 🎯 Attach extension only if the listable is RetailOffice
-        if ($listing->listable_type === "Retail Office") {
-            if($otherDetail){
-                RetailOfficeOtherDetailExtn::factory()->create([
-                    'other_detail_id' => $otherDetail->id,
-                    'retail_office_listing_id' => $listing->listable_id,
-                ]);
+            $otherDetail = $listing->otherDetail;
+            $leaseTerms = $listing->leaseTermsAndConditions;
+            // 🎯 Attach extension only if the listable is RetailOffice
+            if ($listing->listable_type === "Retail Office") {
+                if ($otherDetail) {
+                    RetailOfficeOtherDetailExtn::factory()->create([
+                        'other_detail_id' => $otherDetail->id,
+                        'retail_office_listing_id' => $listing->listable_id,
+                    ]);
+                }
+            } else if ($listing->listable_type === "Office Space") {
+                if ($otherDetail) {
+                    OfficeOtherDetailExtn::factory()->create([
+                        'other_detail_id' => $otherDetail->id,
+                        'office_space_listing_id' => $listing->listable_id,
+                    ]);
+                }
+                if ($leaseTerms) {
+                    OfficeLeaseTermsAndConditionsExtn::factory()->create([
+                        'lease_terms_and_conditions_id' => $leaseTerms->id,
+                        'office_space_listing_id' => $listing->listable_id,
+                    ]);
+                }
             }
-        }
-        else if ($listing->listable_type === "Office Space") {
-            if($otherDetail){
-                OfficeOtherDetailExtn::factory()->create([
-                    'other_detail_id' => $otherDetail->id,
-                    'office_space_listing_id' => $listing->listable_id,
-                ]);
-            }
-            if($leaseTerms){
-                OfficeLeaseTermsAndConditionsExtn::factory()->create([
-                    'lease_terms_and_conditions_id' => $leaseTerms->id,
-                    'office_space_listing_id' => $listing->listable_id,
-                ]);
-            }
-        }
-    });
+        });
     }
 }

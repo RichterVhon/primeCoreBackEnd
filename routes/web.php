@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InquiryController;
+use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Controllers\ListingRelated\ListingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ListingRelated\IndLotListingController;
@@ -8,7 +10,6 @@ use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
 use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
-use App\Models\ListingRelated\OfficeSpaceListing;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
@@ -70,6 +71,11 @@ Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
     Route::post('/', [OfficeSpaceListingController::class, 'store'])->name('officespace.store');
 });
 
-
-
+//Group for Inquiry
+Route::prefix('inquiries')->middleware(['auth'])->group(function () {
+    Route::get('/', [InquiryController::class, 'index'])->name('inquiries.index');
+    Route::get('/{id}', [InquiryController::class, 'show'])->name('inquiries.show');
+    Route::post('/', [InquiryController::class, 'store'])->name('inquiries.store');
+    Route::put('/{id}', [InquiryController::class, 'update'])->name('inquiries.update');
+});
 require __DIR__.'/auth.php';

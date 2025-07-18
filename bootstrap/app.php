@@ -43,8 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
         '/officespacelistings',
         '/commlotlistings',
       
-        '/listings/*'
+        '/listings/*',
         // add other routes as needed
+         '/inquiries',
+        '/inquiries/*',
     ]);
 
         //
