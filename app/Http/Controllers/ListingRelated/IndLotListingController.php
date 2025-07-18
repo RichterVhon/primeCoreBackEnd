@@ -17,7 +17,7 @@ use App\Http\Requests\StoreWarehouseListingRequest;
 
 class IndLotListingController extends Controller
 {
-public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
@@ -25,35 +25,53 @@ public function index(Request $request): JsonResponse
                 'message' => 'Forbidden: Agents or Admin only'
             ], Response::HTTP_FORBIDDEN);
         }
-        
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
         $query = IndLotListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), IndLotListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(IndLotListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = IndLotListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $indlots = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                //IndLot-Specific component classes
-
-                'IndLotListingPropertyDetails',
-                'IndLotTurnoverConditions',
-                'IndLotLeaseRates'
+                'listing.contacts',
+                'listing.inquiries',
+                'indLotLeaseRates',
+                'indLotTurnoverConditions',
+                'indLotListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());
@@ -73,7 +91,7 @@ public function index(Request $request): JsonResponse
 
     public function show($id): JsonResponse
     {
-        $indlot = IndLotListing::with([
+        $indlot = IndLotListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -86,11 +104,23 @@ public function index(Request $request): JsonResponse
             'IndLotTurnoverConditions',
             'IndLotLeaseRates'
 
-         
-        ])->findOrFail($id);
+
+        ])->find($id);
+
+        if ($indlot->trashed()) {
+            return response()->json([
+                'message' => "Industrial Lot Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+
+        if (!$indlot) {
+            return response()->json([
+                'message' => "Industrial Lot Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $indlot]);
-    }    
+    }
 
     use HandlesListingCreation;
 
@@ -129,7 +159,7 @@ public function index(Request $request): JsonResponse
             'IndLotListingPropertyDetails',
             'IndLotTurnoverConditions',
             'IndLotLeaseRates'
- 
+
         ])->findOrFail($indlot->id);
 
         return response()->json([
@@ -138,7 +168,7 @@ public function index(Request $request): JsonResponse
         ], 201);
     }
 
-public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
+    public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
     {
         $indlot = IndLotListing::with([
             'listing',
@@ -170,7 +200,7 @@ public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
 
         // 🧾 Return fully refreshed listing with all relationships
         $updated = IndLotListing::with([
-           'listing.account',
+            'listing.account',
             'listing.location',
             'listing.leaseDocument',
             'listing.leaseTermsAndConditions',
@@ -187,5 +217,48 @@ public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
             'data' => $updated
         ], 201);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $indlot = IndLotListing::with([
+            'listing',
+            'indLotLeaseRates',
+            'indLotTurnoverConditions',
+            'indLotListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($indlot) {
+            $indlot->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Industrial Lot listing and related data successfully soft deleted.'
+        ]);
+    }
+
+    public function restore($id): JsonResponse
+    {
+        $indlot = IndLotListing::withTrashed()->with([
+            'listing',
+            'indLotLeaseRates',
+            'indLotTurnoverConditions',
+            'indLotListingPropertyDetails',
+        ])->findOrFail($id);
+
+        if (!$indlot->trashed()) {
+            return response()->json([
+                'message' => 'Industrial lot listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($indlot) {
+            $indlot->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Industrial lot listing and related data successfully restored.'
+        ]);
+    }
+
 
 }

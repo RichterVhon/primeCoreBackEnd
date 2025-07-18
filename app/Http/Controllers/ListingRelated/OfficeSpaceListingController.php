@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Traits\HandlesListingCreation;
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Requests\StoreOfficeSpaceListingRequest;
 use App\Http\Requests\UpdateOfficeSpaceListingRequest;
@@ -15,51 +18,77 @@ class OfficeSpaceListingController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
         $query = OfficeSpaceListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), OfficeSpaceListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(OfficeSpaceListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = OfficeSpaceListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
-        $Offices = $query
+        $offices = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                'OfficeListingPropertyDetails',
+                'listing.contacts',
+                'listing.inquiries',
+                'OfficeLeaseTermsAndConditionsExtn',
                 'OfficeTurnoverConditions',
                 'OfficeSpecs',
-                // 'OfficeLeaseTermsAndConditionsExtn',
-                // 'OfficeOtherDetailExtn',
+                'OfficeOtherDetailExtn',
+                'OfficeListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());
 
         return response()->json([
-            'data' => $Offices->items(),
+            'data' => $offices->items(),
             'meta' => [
-                'current_page' => $Offices->currentPage(),
-                'per_page' => $Offices->perPage(),
-                'total' => $Offices->total(),
-                'last_page' => $Offices->lastPage(),
-                'next_page_url' => $Offices->nextPageUrl(),
-                'prev_page_url' => $Offices->previousPageUrl()
+                'current_page' => $offices->currentPage(),
+                'per_page' => $offices->perPage(),
+                'total' => $offices->total(),
+                'last_page' => $offices->lastPage(),
+                'next_page_url' => $offices->nextPageUrl(),
+                'prev_page_url' => $offices->previousPageUrl()
             ]
         ]);
     }
-
     use HandlesListingCreation;
 
     public function show($id): JsonResponse
@@ -140,7 +169,7 @@ class OfficeSpaceListingController extends Controller
 
     public function update(UpdateOfficeSpaceListingRequest $request, $id): JsonResponse
     {
-        $officespace = officespaceListing::with([
+        $Office = OfficeSpaceListing::with([
             'listing',
             'OfficeListingPropertyDetails',
             'OfficeTurnoverConditions',
@@ -151,26 +180,26 @@ class OfficeSpaceListingController extends Controller
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($officespace, $data) {
+        DB::transaction(function () use ($Office, $data) {
 
             // Update the already existing listing fields
-            $this->updateListing($officespace->listing, $data['listing'] ?? []);
+            $this->updateListing($Office->listing, $data['listing'] ?? []);
 
             // Update for its components
-            $this->updateListingComponents($officespace->listing, $data['listing'] ?? []);
+            $this->updateListingComponents($Office->listing, $data['listing'] ?? []);
 
-            // Update officespace components
-            $officespace->officeSpecs()->update($data['office_specs'] ?? []);
-            $officespace->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
-            $officespace->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
-            $officespace->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
-            $officespace->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
+            // Update Office components
+            $Office->officeSpecs()->update($data['office_specs'] ?? []);
+            $Office->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
+            $Office->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
+            $Office->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
+            $Office->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
 
 
-            // $officespace->officespaceListingPropDetails()->update($data['officespace_listing_prop_details'] ?? []);
-            // $officespace->officespaceTurnoverConditions()->update($data['officespace_turnover_conditions'] ?? []);
-            // $officespace->officespaceSpecs()->update($data['officespace_specs'] ?? []);
-            // $officespace->officespaceLeaseRate()->update($data['officespace_lease_rates'] ?? []);
+            // $Office->officespaceListingPropDetails()->update($data['officespace_listing_prop_details'] ?? []);
+            // $Office->officespaceTurnoverConditions()->update($data['officespace_turnover_conditions'] ?? []);
+            // $Office->officespaceSpecs()->update($data['officespace_specs'] ?? []);
+            // $Office->officespaceLeaseRate()->update($data['officespace_lease_rates'] ?? []);
         });
 
         // 🧾 Return fully refreshed listing with all relationships
@@ -187,11 +216,60 @@ class OfficeSpaceListingController extends Controller
             'officeListingPropertyDetails',
             'officeOtherDetailExtn',
             'officeLeaseTermsAndConditionsExtn',
-        ])->findOrFail($officespace->id);
+        ])->findOrFail($Office->id);
 
         return response()->json([
-            'message' => 'officespace listing successfully updated.',
+            'message' => 'Office listing successfully updated.',
             'data' => $updated
         ], 201);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $Office = OfficeSpaceListing::with([
+            'listing',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeOtherDetailExtn',
+            'OfficeListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($Office) {
+            $Office->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Office space listing and related data successfully soft deleted.'
+        ]);
+    }
+
+    public function restore($id): JsonResponse
+    {
+        $Office = OfficeSpaceListing::withTrashed()->with([
+            'listing',
+            'OfficeLeaseTermsAndConditionsExtn',
+            'OfficeTurnoverConditions',
+            'OfficeSpecs',
+            'OfficeOtherDetailExtn',
+            'OfficeListingPropertyDetails'
+        ])->findOrFail($id);
+
+        if (!$Office->trashed()) {
+            return response()->json([
+                'message' => 'Office Space listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+
+        DB::transaction(function () use ($Office) {
+            $Office->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Office space listing and related data successfully restored.'
+        ]);
+    }
+
+
 }

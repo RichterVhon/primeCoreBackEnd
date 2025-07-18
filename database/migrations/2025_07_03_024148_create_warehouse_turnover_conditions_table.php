@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('wall_turnover')->nullable();
             $table->text('turnover_remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

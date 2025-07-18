@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\Pylonavailability;
 use App\Traits\HasSearch;
@@ -9,8 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class RetailOfficeOtherDetailExtn extends Model
-{
+class RetailOfficeOtherDetailExtn extends Model {
+    use SoftDeletes;
 
     use HasFactory;
     use HasSearch;

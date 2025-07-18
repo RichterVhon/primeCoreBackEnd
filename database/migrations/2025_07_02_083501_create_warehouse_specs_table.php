@@ -34,6 +34,7 @@ return new class extends Migration
             $table->float('concrete_floor_strength')->nullable();
             $table->float('parking_rate_slot')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

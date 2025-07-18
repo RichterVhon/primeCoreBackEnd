@@ -17,7 +17,7 @@ use App\Http\Requests\UpdateCommLotListingRequest;
 
 class CommLotListingController extends Controller
 {
-public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
         if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
@@ -25,34 +25,52 @@ public function index(Request $request): JsonResponse
                 'message' => 'Forbidden: Agents or Admin only'
             ], Response::HTTP_FORBIDDEN);
         }
-        
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
         $query = CommLotListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), CommLotListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(CommLotListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = CommLotListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $commlots = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                //CommLot-Specific component classes
-
-                'CommLotListingPropertyDetails',
-                'CommLotTurnoverConditions'
+                'listing.contacts',
+                'listing.inquiries',
+                'commLotTurnoverConditions',
+                'commLotListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());
@@ -72,7 +90,7 @@ public function index(Request $request): JsonResponse
 
     public function show($id): JsonResponse
     {
-        $commlot = CommLotListing::with([
+        $commlot = CommLotListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -84,11 +102,23 @@ public function index(Request $request): JsonResponse
             'CommLotListingPropertyDetails',
             'CommLotTurnoverConditions'
 
-         
-        ])->findOrFail($id);
+
+        ])->find($id);
+
+        if ($commlot->trashed()) {
+            return response()->json([
+                'message' => "Commercial Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+
+        if (!$commlot) {
+            return response()->json([
+                'message' => "Commercial Lot Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $commlot]);
-    }    
+    }
     use HandlesListingCreation;
 
     public function store(StoreCommLotListingRequest $request): JsonResponse
@@ -130,7 +160,7 @@ public function index(Request $request): JsonResponse
             'listing.inquiries',
             'commLotTurnoverConditions',
             'commLotListingPropertyDetails'
-        ])->findOrFail($commLot->id);
+        ])->find($commLot->id);
 
         return response()->json([
             'message' => 'CommLot listing successfully created with all components.',
@@ -138,7 +168,24 @@ public function index(Request $request): JsonResponse
         ], 201);
     }
 
-public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
+    public function destroy($id): JsonResponse
+    {
+        $commlot = CommLotListing::with([
+            'listing',
+            'commLotTurnoverConditions',
+            'commLotListingPropertyDetails'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($commlot) {
+            $commlot->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Commercial Lot listing and related data successfully soft deleted.'
+        ]);
+    }
+
+    public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
     {
         $commlot = CommLotListing::with([
             'listing',
@@ -168,7 +215,7 @@ public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
 
         // 🧾 Return fully refreshed listing with all relationships
         $updated = CommLotListing::with([
-           'listing.account',
+            'listing.account',
             'listing.location',
             'listing.leaseDocument',
             'listing.leaseTermsAndConditions',
@@ -177,7 +224,7 @@ public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
             'listing.inquiries',
             'commlotListingPropertyDetails',
             'commlotTurnoverConditions'
-        
+
         ])->findOrFail($commlot->id);
 
         return response()->json([
@@ -185,6 +232,30 @@ public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
             'data' => $updated
         ], 201);
     }
+
+    public function restore($id): JsonResponse
+    {
+        $commlot = CommLotListing::withTrashed()->with([
+            'listing',
+            'commLotTurnoverConditions',
+            'commLotListingPropertyDetails',
+        ])->findOrFail($id);
+
+        if (!$commlot->trashed()) {
+            return response()->json([
+                'message' => 'Commercial lot listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($commlot) {
+            $commlot->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Commercial lot listing and related data successfully restored.'
+        ]);
+    }
+
 
 }
 

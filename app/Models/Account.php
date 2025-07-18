@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Traits\HasSearch;
 use App\Enums\AccountRole;

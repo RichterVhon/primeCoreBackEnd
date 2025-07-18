@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Models\ListingRelated\OtherDetailRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\IdealUse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class TenantUsePolicy extends Model
-{
+class TenantUsePolicy extends Model {
+    use SoftDeletes;
     use HasFactory;
 
     protected $fillable = [

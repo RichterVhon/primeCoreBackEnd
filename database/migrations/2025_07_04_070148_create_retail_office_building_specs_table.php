@@ -43,6 +43,7 @@ return new class extends Migration
             $table->float('floor_to_floor_height')->nullable();
             $table->float('mezzanine')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

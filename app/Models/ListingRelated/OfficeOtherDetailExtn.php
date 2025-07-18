@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\AcUnitType;
 use App\Enums\BackupPowerType;
@@ -10,8 +11,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OfficeOtherDetailExtn extends Model
-{
+class OfficeOtherDetailExtn extends Model {
+    use SoftDeletes;
     use HasFactory;
     protected $table = 'office_other_details_extn';
 protected $fillable= [

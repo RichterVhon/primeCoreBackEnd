@@ -34,11 +34,52 @@ class WarehouseListingController extends Controller
         $query = WarehouseListing::query();
 
         if ($request->filled('search')) {
-            $query->search($request->input('search'), WarehouseListing::searchableFields());
+             $query->search($request->input('search'), WarehouseListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(WarehouseListing::filterableFields()));
+        $rawQuery = $request->query();
+        $filterable = WarehouseListing::filterableFields();
 
+        $filters = [];
+
+        //dump('Raw query keys:', array_keys($request->query()));
+
+
+        foreach ($rawQuery as $key => $value) {
+            //dump("🔍 Checking raw key: {$key}");
+
+            if (in_array($key, $filterable)) {
+                //dump("✅ Direct match found: {$key}");
+                $filters[$key] = $value;
+                continue;
+            }
+
+            // Try to match known relationships
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                //dump("🔄 Comparing {$key} with normalized filterable: {$normalized}");
+
+                if ($normalized === $key) {
+                    //dump("🎯 Matched normalized key: {$key} → {$filterKey}");
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                //dump("❌ No match for key: {$key}");
+            }
+        }
+
+
+
+
+        //dump('Incoming filters:', $filters);
+
+        $query->applyFilters($filters);
+        //dd($query->toSql(), $query->getBindings());
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $warehouses = $query
@@ -52,7 +93,6 @@ class WarehouseListingController extends Controller
                 'listing.leaseTermsAndConditions',
 
                 // Warehouse-specific component classes
-
                 'warehouseListingPropDetails',
                 'warehouseTurnoverConditions',
                 'warehouseSpecs',
@@ -76,7 +116,7 @@ class WarehouseListingController extends Controller
 
     public function show($id): JsonResponse
     {
-        $warehouse = WarehouseListing::with([
+        $warehouse = WarehouseListing::withTrashed()->with([
             'listing.account',
             'listing.location',
             'listing.contacts',
@@ -89,7 +129,19 @@ class WarehouseListingController extends Controller
             'warehouseTurnoverConditions',
             'warehouseSpecs',
             'warehouseLeaseRate'
-        ])->findOrFail($id);
+        ])->find($id);
+
+        if ($warehouse->trashed()) {
+            return response()->json([
+                'message' => "Warehouse Listing with ID {$id} has been deleted."
+            ], 410); // 410 Gone is semantically accurate
+        }
+
+        if (!$warehouse) {
+            return response()->json([
+                'message' => "Warehouse Listing with ID {$id} does not exist."
+            ]);
+        }
 
         return response()->json(['data' => $warehouse]);
     }
@@ -195,6 +247,52 @@ class WarehouseListingController extends Controller
             'data' => $updated
         ], 201);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $warehouse = WarehouseListing::with([
+            'listing',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions',
+            'warehouseSpecs',
+            'warehouseLeaseRate'
+        ])->findOrFail($id);
+
+        DB::transaction(function () use ($warehouse) {
+            $warehouse->delete(); // triggers soft deletes via model event
+        });
+
+        return response()->json([
+            'message' => 'Warehouse listing and related data successfully soft deleted.'
+        ]);
+    }
+
+    public function restore($id): JsonResponse
+    {
+        $warehouse = WarehouseListing::withTrashed()->with([
+            'listing',
+            'warehouseSpecs',
+            'warehouseLeaseRate',
+            'warehouseListingPropDetails',
+            'warehouseTurnoverConditions'
+        ])->findOrFail($id);
+
+        if (!$warehouse->trashed()) {
+            return response()->json([
+                'message' => 'Warehouse listing is not deleted and cannot be restored.'
+            ], 400);
+        }
+
+
+        DB::transaction(function () use ($warehouse) {
+            $warehouse->restoreCascade();
+        });
+
+        return response()->json([
+            'message' => 'Warehouse listing and related data successfully restored.'
+        ]);
+    }
+
 
 }
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,8 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 
-class IndLotListingPropertyDetails extends Model
-{
+class IndLotListingPropertyDetails extends Model {
+    use SoftDeletes;
     use HasFactory;
 
     protected $fillable = [
