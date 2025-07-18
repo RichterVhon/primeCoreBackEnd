@@ -45,6 +45,8 @@ class AccountController extends Controller
                     'email' => $account->email,
                     'role' => $account->role,
                     'status' => $account->status,
+                    'created_at' => $account->created_at,
+                    'updated_at' => $account->updated_at,
                     'contacts' => $account->contacts->map(function ($contact) {
                         return [
                             'id' => $contact->id,

@@ -2,16 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\HasContactValidationRules;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateContactRequest extends FormRequest
-{
+{   
+    use HasContactValidationRules;
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +24,18 @@ class UpdateContactRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        $contactId = $this->route('id') ?? optional($this->route('contact'))->id;
+
+        return array_merge(
+            $this->ContactRulesforUpdate(),
+            [
+                'email_address' => [
+                    'nullable',
+                    'email',
+                    'max:255',
+                    Rule::unique('contacts', 'email_address')->ignore($contactId),
+                ],
+            ]
+        );
     }
 }

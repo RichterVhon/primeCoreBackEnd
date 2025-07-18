@@ -92,21 +92,21 @@ class ContactController extends Controller
     }
 
 
-    // public function update(UpdateContactRequest $request, $id): JsonResponse
-    // {
-    //     $contact = Contact::findOrFail($id);
-    //     $contact->update($request->validated());
+    public function update(UpdateContactRequest $request, $id): JsonResponse
+    {
+        $contact = Contact::findOrFail($id);
+        $contact->update($request->validated());
 
-    //     return response()->json([
-    //         'message' => 'Contact successfully updated.',
-    //         'data' => $contact
-    //     ]);
-    // }
+        return response()->json([
+            'message' => 'Contact successfully updated.',
+            'data' => $contact
+        ]);
+    }
 
-    // public function destroy($id): JsonResponse
-    // {
-    //     Contact::findOrFail($id)->delete();
+    public function destroy($id): JsonResponse
+    {
+        Contact::findOrFail($id)->delete();
 
-    //     return response()->json(['message' => 'Contact successfully deleted.']);
-    // }
+        return response()->json(['message' => 'Contact successfully deleted.']);
+    }
 }
