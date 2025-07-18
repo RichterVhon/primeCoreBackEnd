@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Traits\HandlesListingCreation;
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Requests\StoreOfficeSpaceListingRequest;
 use App\Http\Requests\UpdateOfficeSpaceListingRequest;
@@ -15,51 +18,77 @@ class OfficeSpaceListingController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
         $query = OfficeSpaceListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), OfficeSpaceListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(OfficeSpaceListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = OfficeSpaceListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
-        $Offices = $query
+        $offices = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                'OfficeListingPropertyDetails',
+                'listing.contacts',
+                'listing.inquiries',
+                'OfficeLeaseTermsAndConditionsExtn',
                 'OfficeTurnoverConditions',
                 'OfficeSpecs',
-                // 'OfficeLeaseTermsAndConditionsExtn',
-                // 'OfficeOtherDetailExtn',
+                'OfficeOtherDetailExtn',
+                'OfficeListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());
 
         return response()->json([
-            'data' => $Offices->items(),
+            'data' => $offices->items(),
             'meta' => [
-                'current_page' => $Offices->currentPage(),
-                'per_page' => $Offices->perPage(),
-                'total' => $Offices->total(),
-                'last_page' => $Offices->lastPage(),
-                'next_page_url' => $Offices->nextPageUrl(),
-                'prev_page_url' => $Offices->previousPageUrl()
+                'current_page' => $offices->currentPage(),
+                'per_page' => $offices->perPage(),
+                'total' => $offices->total(),
+                'last_page' => $offices->lastPage(),
+                'next_page_url' => $offices->nextPageUrl(),
+                'prev_page_url' => $offices->previousPageUrl()
             ]
         ]);
     }
-
     use HandlesListingCreation;
 
     public function show($id): JsonResponse

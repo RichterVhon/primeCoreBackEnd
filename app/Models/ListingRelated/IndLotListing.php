@@ -37,21 +37,30 @@ class IndLotListing extends Model
     {
         return array_merge([
             'custom_id',
-            // 'account.email',
-            // 'category.name'
+            'PEZA_accredited',
+            'indLotListingPropertyDetails.lot_shape',
+            'indLotListingPropertyDetails.zoning_classification',
+            'indLotListingPropertyDetails.offering',
+            'indLotTurnoverConditions.lot_condition',
         ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
+
 
     public static function filterableFields(): array
     {
         return array_merge([
             'PEZA_accredited',
-            'ind_listing_property_details.lot_shape',
-            'ind_listing_property_details.zoning_classification',
-            'ind_listing_property_details.offering',
-            'ind_lot_turnover_conditions.lot_condition'
+            'indLotListingPropertyDetails.lot_area',
+            'indLotListingPropertyDetails.frontage_width',
+            'indLotListingPropertyDetails.depth',
+            'indLotListingPropertyDetails.zoning_classification',
+            'indLotListingPropertyDetails.offering',
+            'indLotTurnoverConditions.lot_condition',
+            'indLotLeaseRates.rental_rate_sqm_for_open_area',
+            'indLotLeaseRates.rental_rate_sqm_for_covered_area',
         ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
+
     //para maging morph target ng Listing model
     public function listing(): MorphOne
     {

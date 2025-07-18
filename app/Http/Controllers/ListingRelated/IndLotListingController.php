@@ -31,29 +31,47 @@ class IndLotListingController extends Controller
 
         $query = IndLotListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), IndLotListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(IndLotListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = IndLotListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $indlots = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                //IndLot-Specific component classes
-
-                'IndLotListingPropertyDetails',
-                'IndLotTurnoverConditions',
-                'IndLotLeaseRates'
+                'listing.contacts',
+                'listing.inquiries',
+                'indLotLeaseRates',
+                'indLotTurnoverConditions',
+                'indLotListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());
@@ -94,7 +112,7 @@ class IndLotListingController extends Controller
                 'message' => "Industrial Lot Listing with ID {$id} has been deleted."
             ], 410); // 410 Gone is semantically accurate
         }
-        
+
         if (!$indlot) {
             return response()->json([
                 'message' => "Industrial Lot Listing with ID {$id} does not exist."

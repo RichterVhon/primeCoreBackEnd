@@ -34,44 +34,57 @@ class RetailOfficeListingController extends Controller
             $query->search($request->input('search'), RetailOfficeListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(RetailOfficeListing::filterableFields()));
+        $rawQuery = $request->query();
+        $filterable = RetailOfficeListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
-        $retailoffices = $query
+        $retailListings = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                // RetailOffice-specific component classes
-
-                'RetailOfficeListingPropertyDetails',
-                'RetailOfficeTurnoverConditions',
-                'RetailOfficeBuildingSpecs',
-                'RetailOfficeOtherDetailExtn',
-
+                'listing.contacts',
+                'listing.inquiries',
+                'retailOfficeTurnoverConditions',
+                'retailOfficeListingPropertyDetails',
+                'retailOfficeBuildingSpecs',
+                'retailOfficeOtherDetailExtn'
             ])
             ->paginate(10)
             ->appends($request->query());
 
         return response()->json([
-            'data' => $retailoffices->items(),
+            'data' => $retailListings->items(),
             'meta' => [
-                'current_page' => $retailoffices->currentPage(),
-                'per_page' => $retailoffices->perPage(),
-                'total' => $retailoffices->total(),
-                'last_page' => $retailoffices->lastPage(),
-                'next_page_url' => $retailoffices->nextPageUrl(),
-                'prev_page_url' => $retailoffices->previousPageUrl()
+                'current_page' => $retailListings->currentPage(),
+                'per_page' => $retailListings->perPage(),
+                'total' => $retailListings->total(),
+                'last_page' => $retailListings->lastPage(),
+                'next_page_url' => $retailListings->nextPageUrl(),
+                'prev_page_url' => $retailListings->previousPageUrl()
             ]
         ]);
     }
-
+    
     public function show($id): JsonResponse
     {
         $retailoffice = RetailOfficeListing::withTrashed()->with([
@@ -95,7 +108,7 @@ class RetailOfficeListingController extends Controller
                 'message' => "Retail Office Listing with ID {$id} has been deleted."
             ], 410); // 410 Gone is semantically accurate
         }
-        
+
         if (!$retailoffice) {
             return response()->json([
                 'message' => "Retail Office Listing with ID {$id} does not exist."

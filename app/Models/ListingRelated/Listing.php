@@ -83,30 +83,30 @@ class Listing extends Model
             'date_last_updated',
 
             // Location
-            'location_province',
-            'location_city',
-            'location_district',
+            'location.province',
+            'location.city',
+            'location.district',
 
             // Other Details
-            'otherDetail_electricity_meter',
-            'otherDetail_water_meter',
-            'otherDetail_year_built',
+            'otherDetail.electricity_meter',
+            'otherDetail.water_meter',
+            'otherDetail.year_built',
 
             // Lease Terms
-            'leaseTermsAndConditions_monthly_rate',
-            'leaseTermsAndConditions_cusa_sqm',
-            'leaseTermsAndConditions_security_deposit',
-            'leaseTermsAndConditions_advance_rental',
-            'leaseTermsAndConditions_application_of_advance',
-            'leaseTermsAndConditions_min_lease',
-            'leaseTermsAndConditions_max_lease',
-            'leaseTermsAndConditions_escalation_rate',
-            'leaseTermsAndConditions_escalation_frequency',
-            'leaseTermsAndConditions_escalation_effectivity',
+            'leaseTermsAndConditions.monthly_rate',
+            'leaseTermsAndConditions.cusa_sqm',
+            'leaseTermsAndConditions.security_deposit',
+            'leaseTermsAndConditions.advance_rental',
+            'leaseTermsAndConditions.application_of_advance',
+            'leaseTermsAndConditions.min_lease',
+            'leaseTermsAndConditions.max_lease',
+            'leaseTermsAndConditions.escalation_rate',
+            'leaseTermsAndConditions.escalation_frequency',
+            'leaseTermsAndConditions.escalation_effectivity',
 
             // Contacts (via pivot)
-            'contacts_position',
-            'contacts_company',
+            'contacts.position',
+            'contacts.company',
         ];
     }
 

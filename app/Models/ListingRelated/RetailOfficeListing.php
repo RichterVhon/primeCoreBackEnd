@@ -33,17 +33,29 @@ class RetailOfficeListing extends Model
     {
         return array_merge([
             'custom_id',
-            // 'account.email',
-            // 'category.name'
+            'retailOfficeTurnoverConditions.frontage_turnover',
+            'retailOfficeListingPropertyDetails.unit_number',
+            'retailOfficeBuildingSpecs.handover',
+            'retailOfficeBuildingSpecs.security_system',
+            'retailOfficeOtherDetailExtn.pylon_availability',
         ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
 
     public static function filterableFields(): array
     {
         return array_merge([
-            //'PEZA_accredited'
+            'retailOfficeListingPropertyDetails.floor_level',
+            'retailOfficeListingPropertyDetails.leasable_size',
+            'retailOfficeBuildingSpecs.floor_to_ceiling_height',
+            'retailOfficeBuildingSpecs.floor_to_floor_height',
+            'retailOfficeBuildingSpecs.parking_rate_slot',
+            'retailOfficeBuildingSpecs.passenger_elevators',
+            'retailOfficeBuildingSpecs.backup_power',
+            'retailOfficeOtherDetailExtn.total_floor_count',
         ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
+
+
 
     //para maging morph target ng Listing model
     public function listing(): MorphOne

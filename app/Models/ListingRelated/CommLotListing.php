@@ -30,19 +30,26 @@ class CommLotListing extends Model
     {
         return array_merge([
             'custom_id',
-            // 'account.email',
-            // 'category.name'
+            'commLotListingPropertyDetails.lot_shape',
+            'commLotListingPropertyDetails.zoning_classification',
+            'commLotTurnoverConditions.lot_condition',
+            'commLotTurnoverConditions.turnover_remarks',
         ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
+
 
     public static function filterableFields(): array
     {
         return array_merge([
-            'comm_lot_listing_property_details.lot_shape',
-            'comm_lot_listing_property_details.zoning_classification',
-            'comm_lot_turnover_conditions.lot_condition'
+            'commLotListingPropertyDetails.lot_area',
+            'commLotListingPropertyDetails.frontage_width',
+            'commLotListingPropertyDetails.depth',
+            'commLotListingPropertyDetails.zoning_classification',
+            'commLotListingPropertyDetails.lot_shape',
+            'commLotTurnoverConditions.lot_condition',
         ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
+
 
     //para maging morph target ng Listing model
     public function listing(): MorphOne

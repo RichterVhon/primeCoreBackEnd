@@ -34,11 +34,52 @@ class WarehouseListingController extends Controller
         $query = WarehouseListing::query();
 
         if ($request->filled('search')) {
-            $query->search($request->input('search'), WarehouseListing::searchableFields());
+             $query->search($request->input('search'), WarehouseListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(WarehouseListing::filterableFields()));
+        $rawQuery = $request->query();
+        $filterable = WarehouseListing::filterableFields();
 
+        $filters = [];
+
+        //dump('Raw query keys:', array_keys($request->query()));
+
+
+        foreach ($rawQuery as $key => $value) {
+            //dump("🔍 Checking raw key: {$key}");
+
+            if (in_array($key, $filterable)) {
+                //dump("✅ Direct match found: {$key}");
+                $filters[$key] = $value;
+                continue;
+            }
+
+            // Try to match known relationships
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                //dump("🔄 Comparing {$key} with normalized filterable: {$normalized}");
+
+                if ($normalized === $key) {
+                    //dump("🎯 Matched normalized key: {$key} → {$filterKey}");
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                //dump("❌ No match for key: {$key}");
+            }
+        }
+
+
+
+
+        //dump('Incoming filters:', $filters);
+
+        $query->applyFilters($filters);
+        //dd($query->toSql(), $query->getBindings());
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $warehouses = $query
@@ -52,7 +93,6 @@ class WarehouseListingController extends Controller
                 'listing.leaseTermsAndConditions',
 
                 // Warehouse-specific component classes
-
                 'warehouseListingPropDetails',
                 'warehouseTurnoverConditions',
                 'warehouseSpecs',
@@ -96,7 +136,7 @@ class WarehouseListingController extends Controller
                 'message' => "Warehouse Listing with ID {$id} has been deleted."
             ], 410); // 410 Gone is semantically accurate
         }
-        
+
         if (!$warehouse) {
             return response()->json([
                 'message' => "Warehouse Listing with ID {$id} does not exist."
