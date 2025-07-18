@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Traits\HasSearch;
 use App\Enums\AccountRole;
+use App\Enums\AccountStatus;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasAccountValidationRules;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Account extends Authenticatable
 {
     use HasFactory;
+    use HasSearch;
+    use HasAccountValidationRules;
 
     protected $fillable = [
         'name',
@@ -27,7 +32,29 @@ class Account extends Authenticatable
         'password' => 'hashed', // Laravel will automatically hash the password
         'role' => AccountRole::class, //this is enum, yay
         'status' => 'boolean', // can be active/inactive, create enum later on in the project
+        
+        
+        // 'status' => AccountStatus::class, // can be active/inactive, create enum later on in the project
     ];
+
+    public static function searchableFields(): array
+    {
+        return [
+            'name',
+            'email',
+            'role',
+            'status', // can be enum later on in the projectp
+            // 'account.email',
+            // 'category.name'
+        ];
+    }
+
+    public static function filterableFields(): array
+    {
+        return [
+            //
+        ];
+    }
 
     public function listings(): HasMany
     {
