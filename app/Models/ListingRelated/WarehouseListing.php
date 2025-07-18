@@ -40,15 +40,52 @@ class WarehouseListing extends Model
     {
         return array_merge([
             'custom_id',
-            // 'account.email',
-            // 'category.name'
+            'warehouseListingPropDetails.unit_number',
+            'warehouseTurnoverConditions.turnover_remarks',
+            'warehouseSpecs.type_of_loading_bay',
+            'warehouseSpecs.loading_bay_vehicular_capacity',
+            'warehouseSpecs.electrical_load_capacity',
+            'warehouseSpecs.vehicle_capacity',
         ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
 
     public static function filterableFields(): array
     {
         return array_merge([
-            'PEZA_accredited'
+            'PEZA_accredited',
+
+            // Property Details
+            'warehouseListingPropDetails.leasable_warehouse_area_on_the_ground_floor',
+            'warehouseListingPropDetails.leasable_warehouse_area_on_the_upper_floor',
+            'warehouseListingPropDetails.leasable_office_area',
+            'warehouseListingPropDetails.total_leasable_area',
+            'warehouseListingPropDetails.total_open_area',
+            'warehouseListingPropDetails.total_leasable_area_open_covered',
+            'warehouseListingPropDetails.FDAS',
+
+            // Turnover Conditions
+            'warehouseTurnoverConditions.ceiling_turnover',
+            'warehouseTurnoverConditions.wall_turnover',
+
+            // Specs
+            'warehouseSpecs.application_of_cusa',
+            'warehouseSpecs.apex',
+            'warehouseSpecs.shoulder_height',
+            'warehouseSpecs.dimensions_of_the_entrance',
+            'warehouseSpecs.parking_allotment',
+            'warehouseSpecs.loading_bay',
+            'warehouseSpecs.loading_bay_elevation',
+            'warehouseSpecs.type_of_loading_bay',
+            'warehouseSpecs.loading_bay_vehicular_capacity',
+            'warehouseSpecs.electrical_load_capacity',
+            'warehouseSpecs.vehicle_capacity',
+            'warehouseSpecs.concrete_floor_strength',
+            'warehouseSpecs.parking_rate_slot',
+
+            // Lease Rates
+            'warehouseLeaseRate.rental_rate_sqm_for_open_area',
+            'warehouseLeaseRate.rental_rate_sqm_for_covered_warehouse_area',
+            'warehouseLeaseRate.rental_rate_sqm_for_office_area',
         ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
 

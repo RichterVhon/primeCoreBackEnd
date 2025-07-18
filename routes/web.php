@@ -11,7 +11,7 @@ use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
 use App\Models\ListingRelated\RetailOfficeListing;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
+Route::post('/logout',[AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
 
 // mga routes na need ng active user session
 // Group for all listings

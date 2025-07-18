@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class OfficeSpaceListing extends Model {
+class OfficeSpaceListing extends Model
+{
     use SoftDeletes;
     use HasFactory;
     use HasSearch;
@@ -36,17 +37,27 @@ class OfficeSpaceListing extends Model {
             'OfficeSpecs.accreditation',
             'OfficeSpecs.certification',
             'OfficeTurnoverConditions.handover',
-            // 'account.email',
-            // 'category.name'
+            'OfficeTurnoverConditions.turnover_remarks',
+            'OfficeListingPropertyDetails.unit_number',
         ], array_map(fn($field) => "listing.$field", Listing::searchableFields()));
     }
+
 
     public static function filterableFields(): array
     {
         return array_merge([
-            //
+            'OfficeSpecs.floor_to_ceiling_height',
+            'OfficeSpecs.floor_to_floor',
+            'OfficeSpecs.accreditation',
+            'OfficeSpecs.certification',
+            'OfficeTurnoverConditions.handover',
+            'OfficeListingPropertyDetails.floor_level',
+            'OfficeListingPropertyDetails.leasable_size',
+            'OfficeLeaseTermsAndConditionsExtn.parking_rate_slot',
+            'OfficeLeaseTermsAndConditionsExtn.parking_allotment',
         ], array_map(fn($field) => "listing.$field", Listing::filterableFields()));
     }
+
 
     //para maging morph target ng Listing model
     public function listing(): MorphOne
@@ -118,7 +129,7 @@ class OfficeSpaceListing extends Model {
             self::$deletionGuard = false;
         });
     }
-        protected static bool $restorationGuard = false;
+    protected static bool $restorationGuard = false;
 
     public function restoreCascade(): void
     {

@@ -31,28 +31,46 @@ class CommLotListingController extends Controller
 
         $query = CommLotListing::query();
 
+        // 🔍 Search
         if ($request->filled('search')) {
             $query->search($request->input('search'), CommLotListing::searchableFields());
         }
 
-        $query->applyFilters($request->only(CommLotListing::filterableFields()));
+        // 🧠 Filter normalization
+        $rawQuery = $request->query();
+        $filterable = CommLotListing::filterableFields();
+        $filters = [];
 
+        foreach ($rawQuery as $key => $value) {
+            if (in_array($key, $filterable)) {
+                $filters[$key] = $value;
+                continue;
+            }
+
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                if ($normalized === $key) {
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+        }
+
+        $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
 
         $commlots = $query
             ->with([
-                'listing.account',
                 'listing.location',
-                'listing.inquiries',
-                'listing.contacts',
                 'listing.leaseDocument',
                 'listing.otherDetail',
                 'listing.leaseTermsAndConditions',
-
-                //CommLot-Specific component classes
-
-                'CommLotListingPropertyDetails',
-                'CommLotTurnoverConditions'
+                'listing.contacts',
+                'listing.inquiries',
+                'commLotTurnoverConditions',
+                'commLotListingPropertyDetails'
             ])
             ->paginate(10)
             ->appends($request->query());

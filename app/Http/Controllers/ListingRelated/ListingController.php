@@ -25,6 +25,13 @@ class ListingController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $sortField = $request->input('sort', 'created_at');
         $sortDirection = $request->input('direction', 'desc');
 
@@ -34,17 +41,43 @@ class ListingController extends Controller
             $query->search($request->input('search'), Listing::searchableFields());
         }
 
-        // ✅ Use raw keys as passed from frontend
-        $filters = array_filter(
-            $request->query(),
-            fn($key) => in_array($key, Listing::filterableFields()),
-            ARRAY_FILTER_USE_KEY
-        );
 
-        // // 🐞 Debug: show which filters are being applied
-        // foreach ($filters as $key => $value) {
-        //     dump("Filter: {$key} = {$value}");
-        // }
+        $rawQuery = $request->query();
+        $filterable = Listing::filterableFields();
+
+        $filters = [];
+
+        //dump('Raw query keys:', array_keys($request->query()));
+
+
+        foreach ($rawQuery as $key => $value) {
+            //dump("🔍 Checking raw key: {$key}");
+
+            if (in_array($key, $filterable)) {
+                //dump("✅ Direct match found: {$key}");
+                $filters[$key] = $value;
+                continue;
+            }
+
+            // Try to match known relationships
+            $matched = false;
+            foreach ($filterable as $filterKey) {
+                $normalized = str_replace('.', '_', $filterKey);
+                //dump("🔄 Comparing {$key} with normalized filterable: {$normalized}");
+
+                if ($normalized === $key) {
+                    //dump("🎯 Matched normalized key: {$key} → {$filterKey}");
+                    $filters[$filterKey] = $value;
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                //dump("❌ No match for key: {$key}");
+            }
+        }
+
 
         $query->applyFilters($filters);
         $query->orderByRaw("ISNULL($sortField), $sortField $sortDirection");
