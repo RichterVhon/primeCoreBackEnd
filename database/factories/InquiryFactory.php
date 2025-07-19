@@ -20,11 +20,13 @@ class InquiryFactory extends Factory
     public function definition(): array
     {
         return [
-            'account_id'=>Account::factory(),
+            'agent_id' => Account::factory(), // the agent who logs the inquiry
+            'client_id' => Account::factory(), // the viewer/client
             'listing_id' => Listing::factory(),
             'status' => $this->faker->randomElement(InquiryStatus::cases()),
             'message' => $this->faker->paragraph,
             'viewing_schedule' => $this->faker->optional()->dateTimeBetween('now', '+1 month'),
+            //'agent_in_charge' => $this->faker->name
         ];
     }
 }

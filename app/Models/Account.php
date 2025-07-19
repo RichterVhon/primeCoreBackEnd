@@ -74,4 +74,7 @@ class Account extends Authenticatable
             ->withPivot('company_name') //, 'relationship_type')
             ->withTimestamps();
     }
+
+
+
 }

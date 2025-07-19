@@ -47,8 +47,9 @@ return Application::configure(basePath: dirname(__DIR__))
         '/contacts/*/accounts',
 
 
-
         // add other routes as needed
+         '/inquiries',
+        '/inquiries/*',
     ]);
 
         //

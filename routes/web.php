@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InquiryController;
+use App\Models\ListingRelated\OfficeSpaceListing;
 use App\Http\Controllers\ListingRelated\ListingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ListingRelated\IndLotListingController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AccountContactController;
+
 
 Route::post('/register', [AuthenticatedSessionController::class, 'store'])->name('auth.register');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
@@ -116,4 +119,12 @@ Route::prefix('contacts')->middleware(['auth'])->group(function () {
 });
 
 
-require __DIR__ . '/auth.php';
+//Group for Inquiry
+Route::prefix('inquiries')->middleware(['auth'])->group(function () {
+    Route::get('/', [InquiryController::class, 'index'])->name('inquiries.index');
+    Route::get('/{id}', [InquiryController::class, 'show'])->name('inquiries.show');
+    Route::post('/', [InquiryController::class, 'store'])->name('inquiries.store');
+    Route::put('/{id}', [InquiryController::class, 'update'])->name('inquiries.update');
+});
+require __DIR__.'/auth.php';
+

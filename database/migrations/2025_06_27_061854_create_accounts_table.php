@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('role')->default('viewer'); // can be 'user', 'admin', etc.
+            $table->string('role')->default('client'); 
             $table->boolean('status')->default(true);
             $table->timestamps();
         $table->softDeletes();
