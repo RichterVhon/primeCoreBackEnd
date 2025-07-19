@@ -14,11 +14,20 @@ return new class extends Migration
     {
         Schema::create('inquiries', function (Blueprint $table) {
             $table->id();
+            // Agent who logged the inquiry
             SchemaHelpers::foreignKey(
                 $table,
-                'account_id',
+                'agent_id',
                 'accounts',
-                'fk_inquiries_account'
+                'fk_inquiries_agent'
+            );
+
+            // Client/viewer the inquiry is for
+            SchemaHelpers::foreignKey(
+                $table,
+                'client_id',
+                'accounts',
+                'fk_inquiries_client'
             );
             SchemaHelpers::foreignKey(
                 $table,
@@ -26,9 +35,10 @@ return new class extends Migration
                 'listings',
                 'fk_inquiries_listing'
             );
-            $table->string('status'); 
+            //$table->string('agent_in_charge')->nullable();
+            $table->string('status');
             $table->text('message');
-            $table->dateTime('viewing_schedule')->nullable(); 
+            $table->dateTime('viewing_schedule')->nullable();
             $table->timestamps();
         $table->softDeletes();
         });
