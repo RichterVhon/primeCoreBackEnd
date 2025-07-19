@@ -1,8 +1,14 @@
 <?php
 
+use App\Models\Account;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InquiryController;
 use App\Models\ListingRelated\OfficeSpaceListing;
+use App\Http\Controllers\AccountContactController;
+use App\Http\Controllers\Auth\RegisteredAccountController;
 use App\Http\Controllers\ListingRelated\ListingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ListingRelated\IndLotListingController;
@@ -10,19 +16,17 @@ use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
 use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\AccountContactController;
 
 
-Route::post('/register', [AuthenticatedSessionController::class, 'store'])->name('auth.register');
+Route::post('/register', [RegisteredAccountController::class, 'store'])->name('auth.register');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
-Route::post('/logout',[AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('auth.logout');
 
 // mga routes na need ng active user session
 // Group for all listings
 Route::prefix('listings')->middleware(['auth'])->group(function () {
-    Route::get('/', [ListingController::class, 'index'])->name('listings.index');;
+    Route::get('/', [ListingController::class, 'index'])->name('listings.index');
+    ;
     Route::get('/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::delete('/{id}', [ListingController::class, 'destroy'])->name('listings.destroy');
 
@@ -68,7 +72,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [CommLotListingController::class, 'show']);
     Route::post('/', [CommLotListingController::class, 'store'])->name('commlot.store');
     Route::delete('/{id}', [CommLotListingController::class, 'destroy'])->name('commlot.destroy');
-    Route::post('/{id}/restore', [CommLotListingController::class, 'restore'])->name('commlot.restore');   
+    Route::post('/{id}/restore', [CommLotListingController::class, 'restore'])->name('commlot.restore');
 });
 
 //Group for retail-specific listings
@@ -98,6 +102,8 @@ Route::prefix('accounts')->middleware(['auth'])->group(function () {
     Route::post('/', [AccountController::class, 'store'])->name('accounts.store');
     Route::put('/{id}', [AccountController::class, 'update'])->name('accounts.update');
     Route::delete('/{id}', [AccountController::class, 'destroy'])->name('accounts.destroy');
+    Route::post('/{id}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
+
 
     // account to contact routes
     Route::post('/{id}/contacts', [AccountContactController::class, 'store'])->name('accounts.contacts.store');
@@ -105,6 +111,55 @@ Route::prefix('accounts')->middleware(['auth'])->group(function () {
     Route::put('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'update'])->name('accounts.contacts.update');
     Route::delete('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'destroy'])->name('accounts.contacts.detach');
 });
+
+//for myAccount tab
+Route::get('/me', function () {
+    $account = Account::with([
+        'contacts' => fn($q) => $q->withPivot('company_name'),
+        'listings',
+        'clientInquiries',
+        'agentInquiries',
+    ])->findOrFail(Auth::id());
+
+    return response()->json([
+        'data' => [
+            'id' => $account->id,
+            'name' => $account->name,
+            'email' => $account->email,
+            'role' => $account->role,
+            'status' => $account->status,
+            'created_at' => $account->created_at,
+            'updated_at' => $account->updated_at,
+
+            'contacts' => $account->contacts->map(fn($contact) => [
+                'id' => $contact->id,
+                'contact_person' => $contact->contact_person,
+                'email_address' => $contact->email_address,
+                'company_name' => optional($contact->pivot)->company_name,
+            ])->values(),
+
+            'listings' => $account->listings->map(fn($listing) => [
+                'id' => $listing->id,
+                'property_name' => $listing->property_name ?? null,
+                'date_uploaded' => $listing->date_uploaded,
+                'date_last_updated' => $listing->date_last_updated,
+                'category' => $listing->listable_type,
+                'status' => $listing->status,
+            ])->values(),
+
+            'inquiries' => collect()
+                ->merge($account->clientInquiries)
+                ->merge($account->agentInquiries)
+                ->map(fn($inquiry) => [
+                    'id' => $inquiry->id,
+                    'status' => $inquiry->status,
+                    'submitted_at' => $inquiry->created_at,
+                ])
+                ->unique('id')
+                ->values()
+        ]
+    ]);
+})->middleware('auth')->name('accounts.me');
 
 // contact routes
 Route::prefix('contacts')->middleware(['auth'])->group(function () {
@@ -126,5 +181,5 @@ Route::prefix('inquiries')->middleware(['auth'])->group(function () {
     Route::post('/', [InquiryController::class, 'store'])->name('inquiries.store');
     Route::put('/{id}', [InquiryController::class, 'update'])->name('inquiries.update');
 });
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
