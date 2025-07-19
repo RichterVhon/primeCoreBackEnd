@@ -22,6 +22,23 @@ class Contact extends Model {
         //di ko na lagay dito yung listing_id kasi hindi naman siya pagmamay-ari ng Contact model
     ];
 
+    public static function searchableFields(): array
+    {
+        return [
+            'contact_person',
+            'position',
+            'contact_number',
+            'email_address',
+        ];
+    }
+
+    public static function filterableFields(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public function listings(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\ListingRelated\Listing::class)
