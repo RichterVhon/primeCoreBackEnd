@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('accreditation')->nullable(); 
             $table->string('certification')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

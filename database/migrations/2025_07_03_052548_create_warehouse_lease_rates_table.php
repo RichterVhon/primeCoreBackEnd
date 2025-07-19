@@ -24,6 +24,7 @@ return new class extends Migration
             $table->float('rental_rate_sqm_for_covered_warehouse_area')->nullable();
             $table->float('rental_rate_sqm_for_office_area')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

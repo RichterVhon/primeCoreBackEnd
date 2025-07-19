@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\AccreditationType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OfficeSpecs extends Model
-{
+class OfficeSpecs extends Model {
+    use SoftDeletes;
 
     use HasFactory;
 

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('floor')->nullable();
             $table->string('turnover_remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

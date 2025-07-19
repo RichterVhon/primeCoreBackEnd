@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('lot_condition'); // can be enum later on in the project
             $table->text('turnover_remarks')->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

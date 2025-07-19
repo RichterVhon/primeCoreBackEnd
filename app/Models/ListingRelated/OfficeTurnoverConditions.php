@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\HandoverType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OfficeTurnoverConditions extends Model
-{
+class OfficeTurnoverConditions extends Model {
+    use SoftDeletes;
     use HasFactory;
     
     protected $fillable = [

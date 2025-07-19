@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class WarehouseLeaseRates extends Model
-{
+class WarehouseLeaseRates extends Model {
+    use SoftDeletes;
 
     use HasFactory;
     //attach ko to sa warehouse specs, since ayun yung parang tumatayong lease terms and conditions extension ng warehouse listing

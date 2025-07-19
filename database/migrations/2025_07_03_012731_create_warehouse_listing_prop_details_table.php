@@ -29,6 +29,7 @@ return new class extends Migration
             $table->float('total_leasable_area_open_covered')->nullable();
             $table->string('FDAS')->nullable(); 
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

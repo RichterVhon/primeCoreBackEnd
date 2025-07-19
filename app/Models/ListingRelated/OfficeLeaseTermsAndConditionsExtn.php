@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\TaxOnCusa;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OfficeLeaseTermsAndConditionsExtn extends Model
-{
+class OfficeLeaseTermsAndConditionsExtn extends Model {
+    use SoftDeletes;
 
     use HasFactory;
 

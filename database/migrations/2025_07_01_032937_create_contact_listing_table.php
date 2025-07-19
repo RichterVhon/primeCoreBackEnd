@@ -29,6 +29,7 @@ return new class extends Migration
             );
             $table->string('company')->nullable(); // Company name associated with the contact in
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

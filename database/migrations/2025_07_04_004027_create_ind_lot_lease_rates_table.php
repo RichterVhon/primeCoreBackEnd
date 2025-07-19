@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('rental_rate_sqm_for_open_area', 10, 2)->nullable();
             $table->decimal('rental_rate_sqm_for_covered_area', 10, 2)->nullable();
             $table->timestamps();
+        $table->softDeletes();
         });
     }
 

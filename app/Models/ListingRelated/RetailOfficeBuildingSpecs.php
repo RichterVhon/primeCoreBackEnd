@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\ListingRelated;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Enums\HandoverType;
 use App\Enums\BackUpPowerOption;
@@ -10,8 +11,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class RetailOfficeBuildingSpecs extends Model
-{   
+class RetailOfficeBuildingSpecs extends Model {
+    use SoftDeletes;   
     use HasFactory;
     //retailparking and retailmeasurements was merged into this model
     protected $fillable = [
