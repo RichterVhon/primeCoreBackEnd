@@ -53,6 +53,5 @@ class Contact extends Model {
             ->using(\App\Models\AccountContact::class)
             ->withPivot('company_name') //, 'relationship_type')
             ->withTimestamps();
-
     }
 }

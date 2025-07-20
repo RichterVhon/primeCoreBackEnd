@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('role')->default('client'); 
             $table->boolean('status')->default(true);
             $table->timestamps();
-        $table->softDeletes();
+            $table->softDeletes();
         });
     }
 
