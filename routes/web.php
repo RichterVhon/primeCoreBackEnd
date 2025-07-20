@@ -42,7 +42,7 @@ Route::prefix('listings')->middleware(['auth'])->group(function () {
     Route::put('/indlot/{id}', [IndLotListingController::class, 'update'])->name('listings.indlot.update');
     Route::put('/commlot/{id}', [CommLotListingController::class, 'update'])->name('listings.commlot.update');
 
-    Route::post('{id}/restore', [ListingController::class, 'restore'])->name('listings.restore');
+    Route::patch('{id}/restore', [ListingController::class, 'restore'])->name('listings.restore');
 
 
 });
@@ -54,7 +54,7 @@ Route::prefix('warehouselistings')->middleware(['auth'])->group(function () {
     Route::post('/', [WarehouseListingController::class, 'store'])->name('warehouse.store');
     Route::put('/{id}', [WarehouseListingController::class, 'update'])->name('warehouse.update');
     Route::delete('/{id}', [WarehouseListingController::class, 'destroy'])->name('warehouse.destroy');
-    Route::post('/{id}/restore', [WarehouseListingController::class, 'restore'])->name('warehouse.restore');
+    Route::patch('/{id}/restore', [WarehouseListingController::class, 'restore'])->name('warehouse.restore');
 });
 
 // Group for IndLots=specific listings
@@ -63,7 +63,7 @@ Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [IndLotListingController::class, 'show']);
     Route::post('/', [IndLotListingController::class, 'store'])->name('indlot.store');
     Route::delete('/{id}', [IndLotListingController::class, 'destroy'])->name('indlot.destroy');
-    Route::post('/{id}/restore', [IndLotListingController::class, 'restore'])->name('indlot.restore');
+    Route::patch('/{id}/restore', [IndLotListingController::class, 'restore'])->name('indlot.restore');
 });
 
 //Group for CommLot-specific listings
@@ -72,7 +72,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [CommLotListingController::class, 'show']);
     Route::post('/', [CommLotListingController::class, 'store'])->name('commlot.store');
     Route::delete('/{id}', [CommLotListingController::class, 'destroy'])->name('commlot.destroy');
-    Route::post('/{id}/restore', [CommLotListingController::class, 'restore'])->name('commlot.restore');
+    Route::patch('/{id}/restore', [CommLotListingController::class, 'restore'])->name('commlot.restore');
 });
 
 //Group for retail-specific listings
@@ -82,7 +82,7 @@ Route::prefix('retailofficelistings')->middleware(['auth'])->group(function () {
     Route::post('/', [RetailOfficeListingController::class, 'store'])->name('retailoffice.store');
     Route::put('/{id}', [RetailOfficeListingController::class, 'update'])->name('retailoffice.update');
     Route::delete('/{id}', [RetailOfficeListingController::class, 'destroy'])->name('retailoffice.destroy');
-    Route::post('/{id}/restore', [RetailOfficeListingController::class, 'restore'])->name('retailoffice.restore');
+    Route::patch('/{id}/restore', [RetailOfficeListingController::class, 'restore'])->name('retailoffice.restore');
 });
 
 // Group for office-specific listings
@@ -92,7 +92,7 @@ Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
     Route::post('/', [OfficeSpaceListingController::class, 'store'])->name('officespace.store');
     Route::put('/{id}', [OfficeSpaceListingController::class, 'update'])->name('officespace.update');
     Route::delete('/{id}', [OfficeSpaceListingController::class, 'destroy'])->name('officespace.destroy');
-    Route::post('{id}/restore', [OfficeSpaceListingController::class, 'restore'])->name('officespace.restore');
+    Route::patch('{id}/restore', [OfficeSpaceListingController::class, 'restore'])->name('officespace.restore');
 });
 
 // Account routes
@@ -102,7 +102,7 @@ Route::prefix('accounts')->middleware(['auth'])->group(function () {
     Route::post('/', [AccountController::class, 'store'])->name('accounts.store');
     Route::put('/{id}', [AccountController::class, 'update'])->name('accounts.update');
     Route::delete('/{id}', [AccountController::class, 'destroy'])->name('accounts.destroy');
-    Route::post('/{id}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
+    Route::patch('/{id}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
 
 
     // account to contact routes
@@ -167,10 +167,12 @@ Route::prefix('contacts')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [ContactController::class, 'show'])->name('contacts.show');
     Route::post('/', [ContactController::class, 'store'])->name('contacts.store');
     Route::put('/{id}', [ContactController::class, 'update'])->name('contacts.update');
-    Route::delete('/{id}', [ContactController::class, 'destroy'])->name('contacts.destroy');
-
-    // Link accounts from the contact side
-    Route::get('/{id}/accounts', [AccountContactController::class, 'fromContact'])->name('contacts.accounts.index');
+    // Soft delete contact for current account (pivot removal only)
+    Route::delete('/{id}', [ContactController::class, 'softDelete'])->name('contacts.softDelete');
+    // Soft delete entire contact + pivot links for everyone
+    Route::delete('/{id}/force', [ContactController::class, 'forceDelete'])->name('contacts.forceDelete');
+    // Restore soft-deleted contact globally
+    Route::patch('/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
 });
 
 

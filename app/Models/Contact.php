@@ -1,17 +1,18 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasSearch;
 
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Contact extends Model {
     use SoftDeletes;
     use HasFactory;
-
+    use HasSearch;
     protected $fillable = [
         'contact_person',
         'position',
@@ -51,7 +52,7 @@ class Contact extends Model {
     {
         return $this->belongsToMany(\App\Models\Account::class)
             ->using(\App\Models\AccountContact::class)
-            ->withPivot('company_name') //, 'relationship_type')
+            ->withPivot('company_name', 'deleted_at') //, 'relationship_type')
             ->withTimestamps();
     }
 }
