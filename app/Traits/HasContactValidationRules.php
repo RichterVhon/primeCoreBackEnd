@@ -12,9 +12,8 @@ trait HasContactValidationRules
             'contact_number' => 'nullable|string|max:50',
             'email_address' => 'nullable|email|max:255',
             'accounts' => 'array',
-            'accounts.*.account_id' => 'required|exists:accounts,id',
+            'accounts.*.email' => 'required|email',
             'accounts.*.company_name' => 'nullable|string|max:255',
-
         ];
     }
 
