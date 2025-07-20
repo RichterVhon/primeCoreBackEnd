@@ -40,7 +40,7 @@ class Inquiry extends Model {
             'agent.email',
             'client.name',
             'client.email',
-            'listing.name',
+            'listing.property_name',
         ];
     }
 
