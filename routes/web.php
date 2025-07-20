@@ -16,7 +16,7 @@ use App\Http\Controllers\ListingRelated\CommLotListingController;
 use App\Http\Controllers\ListingRelated\WarehouseListingController;
 use App\Http\Controllers\ListingRelated\OfficeSpaceListingController;
 use App\Http\Controllers\ListingRelated\RetailOfficeListingController;
-
+use App\Models\Inquiry;
 
 Route::post('/register', [RegisteredAccountController::class, 'store'])->name('auth.register');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('auth.login');
@@ -62,6 +62,7 @@ Route::prefix('indlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [IndLotListingController::class, 'index']);
     Route::get('/{id}', [IndLotListingController::class, 'show']);
     Route::post('/', [IndLotListingController::class, 'store'])->name('indlot.store');
+    Route::put('/{id}', [IndLotListingController::class, 'update'])->name('indlot.update');
     Route::delete('/{id}', [IndLotListingController::class, 'destroy'])->name('indlot.destroy');
     Route::patch('/{id}/restore', [IndLotListingController::class, 'restore'])->name('indlot.restore');
 });
@@ -71,6 +72,7 @@ Route::prefix('commlotlistings')->middleware(['auth'])->group(function () {
     Route::get('/', [CommLotListingController::class, 'index']);
     Route::get('/{id}', [CommLotListingController::class, 'show']);
     Route::post('/', [CommLotListingController::class, 'store'])->name('commlot.store');
+    Route::put('/{id}', [CommLotListingController::class, 'update'])->name('commlot.update');
     Route::delete('/{id}', [CommLotListingController::class, 'destroy'])->name('commlot.destroy');
     Route::patch('/{id}/restore', [CommLotListingController::class, 'restore'])->name('commlot.restore');
 });
@@ -99,17 +101,17 @@ Route::prefix('officespacelistings')->middleware(['auth'])->group(function () {
 Route::prefix('accounts')->middleware(['auth'])->group(function () {
     Route::get('/', [AccountController::class, 'index'])->name('accounts.index');
     Route::get('/{id}', [AccountController::class, 'show'])->name('accounts.show');
-    Route::post('/', [AccountController::class, 'store'])->name('accounts.store');
+    //Route::post('/', [AccountController::class, 'store'])->name('accounts.store');
     Route::put('/{id}', [AccountController::class, 'update'])->name('accounts.update');
     Route::delete('/{id}', [AccountController::class, 'destroy'])->name('accounts.destroy');
     Route::patch('/{id}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
 
 
-    // account to contact routes
-    Route::post('/{id}/contacts', [AccountContactController::class, 'store'])->name('accounts.contacts.store');
-    Route::get('/{id}/contacts', [AccountContactController::class, 'index'])->name('accounts.contacts.index');
-    Route::put('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'update'])->name('accounts.contacts.update');
-    Route::delete('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'destroy'])->name('accounts.contacts.detach');
+    // // account to contact routes
+    // Route::post('/{id}/contacts', [AccountContactController::class, 'store'])->name('accounts.contacts.store');
+    // Route::get('/{id}/contacts', [AccountContactController::class, 'index'])->name('accounts.contacts.index');
+    // Route::put('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'update'])->name('accounts.contacts.update');
+    // Route::delete('/{account_id}/contacts/{contact_id}', [AccountContactController::class, 'destroy'])->name('accounts.contacts.detach');
 });
 
 //for myAccount tab
@@ -182,6 +184,9 @@ Route::prefix('inquiries')->middleware(['auth'])->group(function () {
     Route::get('/{id}', [InquiryController::class, 'show'])->name('inquiries.show');
     Route::post('/', [InquiryController::class, 'store'])->name('inquiries.store');
     Route::put('/{id}', [InquiryController::class, 'update'])->name('inquiries.update');
+    Route::delete('/{id}', [InquiryController::class, 'destroy'])->name('inquiries.destory');
+    Route::patch('/{id}/restore', [InquiryController::class, 'restore'])->name('inquiry.restore');
+
 });
 require __DIR__ . '/auth.php';
 
