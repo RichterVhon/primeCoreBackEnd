@@ -58,18 +58,20 @@ class Contact extends Model
             ->withTimestamps();
     }
 
+
+
     protected static function booted()
     {
         static::created(function (Contact $contact) {
-            $accountId = Auth::user()->id;
+            $user = Auth::user();
 
-            if ($accountId) {
-                // Attach the logged-in user to the pivot (account_contact)
+            if ($user) {
                 $contact->accounts()->syncWithoutDetaching([
-                    $accountId => ['company_name' => null] // Optional: you can set company_name if known
+                    $user->id => ['company_name' => null]
                 ]);
             }
         });
     }
+
 
 }
