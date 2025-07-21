@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Models\Contact;
 use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+
 use App\Models\ListingRelated\Listing;
 
 use App\Traits\HandlesListingCreation;
-
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\ListingRelated\WarehouseListing;
 use App\Http\Requests\StoreWarehouseListingRequest;
@@ -34,7 +35,7 @@ class WarehouseListingController extends Controller
         $query = WarehouseListing::query();
 
         if ($request->filled('search')) {
-             $query->search($request->input('search'), WarehouseListing::searchableFields());
+            $query->search($request->input('search'), WarehouseListing::searchableFields());
         }
 
         $rawQuery = $request->query();
@@ -116,6 +117,12 @@ class WarehouseListingController extends Controller
 
     public function show($id): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
         $warehouse = WarehouseListing::withTrashed()->with([
             'listing.account',
             'listing.location',
@@ -151,7 +158,17 @@ class WarehouseListingController extends Controller
 
     public function store(StoreWarehouseListingRequest $request): JsonResponse
     {
-        $warehouse = DB::transaction(function () use ($request) {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $warehouse = DB::transaction(function () use ($request, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $data = $request->validated();
 
             // Create warehouse morph target
@@ -159,10 +176,39 @@ class WarehouseListingController extends Controller
                 'PEZA_accredited' => $data['PEZA_accredited']
             ]);
 
+            // 🧠 Prepare contacts from email array
+            $pivotData = [];
+
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(
+                        ['email_address' => $entry['email']],
+                        [] // ⛑ No name passed — avoids mismatched identity
+                    );
+
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            // Inject into listing for trait method to use
+            $data['listing']['contacts'] = [];
+
+            foreach ($pivotData as $contactId => $pivot) {
+                $data['listing']['contacts'][] = [
+                    'contact_id' => $contactId,
+                    'company' => $pivot['company']
+                ];
+            }
+
             // Create listing + attach morph
             $listing = $this->createListing($data['listing'], $warehouse);
+            $listingRedirectUrl = route('warehouse.show', ['id' => $warehouse->id]);
 
-            // 📎 Add nested listing components
+            // Add nested listing components
             $this->createListingComponents($listing, $data['listing']);
 
             // Add warehouse-specific components
@@ -171,10 +217,16 @@ class WarehouseListingController extends Controller
             $warehouse->warehouseSpecs()->create($data['warehouse_specs'] ?? []);
             $warehouse->warehouseLeaseRate()->create($data['warehouse_lease_rates'] ?? []);
 
+            // Determine appropriate contact redirect URL
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.update', ['id' => $contact->id]),
+                default => route('contacts.index')
+            };
+
             return $warehouse;
         });
 
-        // ⏪ Fetch inserted data with full relationships
+        // Fetch full listing with relationships
         $fullWarehouse = WarehouseListing::with([
             'listing.account',
             'listing.location',
@@ -190,14 +242,29 @@ class WarehouseListingController extends Controller
         ])->findOrFail($warehouse->id);
 
         return response()->json([
-            'message' => 'Warehouse listing successfully created with all components.',
-            'data' => $fullWarehouse
+            'message' => 'Warehouse listing successfully created.',
+            'data' => $fullWarehouse,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address,
+                //'edit_url' => route('contacts.update', ['contact' => $c->id])
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
         ], 201);
     }
 
-
     public function update(UpdateWarehouseListingRequest $request, $id): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
         $warehouse = WarehouseListing::with([
             'listing',
             'warehouseListingPropDetails',
@@ -208,26 +275,59 @@ class WarehouseListingController extends Controller
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($warehouse, $data) {
+        DB::transaction(function () use ($warehouse, $data, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             // 🧱 Update warehouse morph record
             $warehouse->update([
                 'PEZA_accredited' => $data['PEZA_accredited'] ?? $warehouse->PEZA_accredited,
             ]);
 
-            // 🧍 Update shared listing fields
+            $pivotData = [];
+
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(
+                        ['email_address' => $entry['email']],
+                        [] // ⚠️ No name provided — avoids mismatched identity
+                    );
+
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            // 💡 Transform to pivot-ready array for trait
+            $data['listing']['contacts'] = [];
+
+            foreach ($pivotData as $contactId => $pivot) {
+                $data['listing']['contacts'][] = [
+                    'contact_id' => $contactId,
+                    'company' => $pivot['company']
+                ];
+            }
+
+            // 🧍 Update listing
             $this->updateListing($warehouse->listing, $data['listing'] ?? []);
 
-            // 🔄 Update listing components
+            // 🔄 Update components
             $this->updateListingComponents($warehouse->listing, $data['listing'] ?? []);
-
-            // ⚙️ Update warehouse components
             $warehouse->warehouseListingPropDetails()->update($data['warehouse_listing_prop_details'] ?? []);
             $warehouse->warehouseTurnoverConditions()->update($data['warehouse_turnover_conditions'] ?? []);
             $warehouse->warehouseSpecs()->update($data['warehouse_specs'] ?? []);
             $warehouse->warehouseLeaseRate()->update($data['warehouse_lease_rates'] ?? []);
+
+            // 📎 Listing show URL
+            $listingRedirectUrl = route('warehouse.show', ['id' => $warehouse->id]);
+
+            // 📍 Smart contact redirect logic
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.update', ['id' => $contact->id]),
+                default => route('contacts.index')
+            };
         });
 
-        // 🧾 Return fully refreshed listing with all relationships
         $updated = WarehouseListing::with([
             'listing.account',
             'listing.location',
@@ -244,12 +344,25 @@ class WarehouseListingController extends Controller
 
         return response()->json([
             'message' => 'Warehouse listing successfully updated.',
-            'data' => $updated
-        ], 201);
+            'data' => $updated,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address,
+                //'edit_url' => route('contacts.edit', ['id' => $c->id])
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
+        ], 200);
     }
+
 
     public function destroy($id): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
         $warehouse = WarehouseListing::with([
             'listing',
             'warehouseListingPropDetails',
@@ -269,6 +382,12 @@ class WarehouseListingController extends Controller
 
     public function restore($id): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
         $warehouse = WarehouseListing::withTrashed()->with([
             'listing',
             'warehouseSpecs',

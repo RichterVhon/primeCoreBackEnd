@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Models\Contact;
 use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,7 +85,7 @@ class RetailOfficeListingController extends Controller
             ]
         ]);
     }
-    
+
     public function show($id): JsonResponse
     {
         $retailoffice = RetailOfficeListing::withTrashed()->with([
@@ -122,35 +123,58 @@ class RetailOfficeListingController extends Controller
 
     public function store(StoreRetailOfficeListingRequest $request): JsonResponse
     {
-        $retailOffice = DB::transaction(function () use ($request) {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $retailOffice = DB::transaction(function () use ($request, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $data = $request->validated();
 
-            // Create retail office morph target
-            $retailOffice = RetailOfficeListing::create([
-                // add any direct retail office fields here if applicable
-            ]);
+            $retailOffice = RetailOfficeListing::create();
 
-            // Create listing + attach morph
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
+
             $listing = $this->createListing($data['listing'], $retailOffice);
-
-            // Add nested listing components
             $this->createListingComponents($listing, $data['listing']);
-            $otherDetail = $listing->otherDetail;
 
-            // Create related retail office components
             $retailOffice->retailOfficeListingPropertyDetails()->create($data['retail_office_listing_property_details'] ?? []);
             $retailOffice->retailOfficeTurnoverConditions()->create($data['retail_office_turnover_conditions'] ?? []);
             $retailOffice->retailOfficeBuildingSpecs()->create($data['retail_office_building_specs'] ?? []);
-            $retailOffice->retailOfficeOtherDetailExtn()->create(
-                array_merge(
-                    $data['retail_office_other_detail_extn'] ?? [],
-                    ['other_detail_id' => $otherDetail->id]
-                )
-            );
+            $retailOffice->retailOfficeOtherDetailExtn()->create(array_merge(
+                $data['retail_office_other_detail_extn'] ?? [],
+                ['other_detail_id' => $listing->otherDetail->id]
+            ));
+
+            $listingRedirectUrl = route('retailoffice.show', ['id' => $retailOffice->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
+
             return $retailOffice;
         });
 
-        // ⏪ Fetch inserted data with full relationships
         $fullRetailOffice = RetailOfficeListing::with([
             'listing.account',
             'listing.location',
@@ -166,9 +190,94 @@ class RetailOfficeListingController extends Controller
         ])->findOrFail($retailOffice->id);
 
         return response()->json([
-            'message' => 'Retail office listing successfully created with all components.',
-            'data' => $fullRetailOffice
+            'message' => 'Retail office listing successfully created.',
+            'data' => $fullRetailOffice,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
         ], 201);
+    }
+
+    public function update(UpdateRetailOfficeListingRequest $request, $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $retailOffice = RetailOfficeListing::with([
+            'listing',
+            'retailOfficeListingPropertyDetails',
+            'retailOfficeTurnoverConditions',
+            'retailOfficeBuildingSpecs',
+            'retailOfficeOtherDetailExtn'
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($retailOffice, $data, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
+
+            $this->updateListing($retailOffice->listing, $data['listing'] ?? []);
+            $this->updateListingComponents($retailOffice->listing, $data['listing'] ?? []);
+
+            $retailOffice->retailOfficeListingPropertyDetails()->update($data['retail_office_listing_property_details'] ?? []);
+            $retailOffice->retailOfficeTurnoverConditions()->update($data['retail_office_turnover_conditions'] ?? []);
+            $retailOffice->retailOfficeBuildingSpecs()->update($data['retail_office_building_specs'] ?? []);
+            $retailOffice->retailOfficeOtherDetailExtn()->update($data['retail_office_other_detail_extn'] ?? []);
+
+            $listingRedirectUrl = route('retailoffice.show', ['id' => $retailOffice->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
+        });
+
+        $updated = RetailOfficeListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'retailOfficeListingPropertyDetails',
+            'retailOfficeTurnoverConditions',
+            'retailOfficeBuildingSpecs',
+            'retailOfficeOtherDetailExtn'
+        ])->findOrFail($retailOffice->id);
+
+        return response()->json([
+            'message' => 'Retail office listing successfully updated.',
+            'data' => $updated,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
+        ], 200);
     }
 
 
@@ -216,54 +325,4 @@ class RetailOfficeListingController extends Controller
         ]);
     }
 
-
-
-    public function update(UpdateRetailOfficeListingRequest $request, $id): JsonResponse
-    {
-        $retailoffice = RetailOfficeListing::with([
-            'listing',
-            'RetailOfficeListingPropertyDetails',
-            'RetailOfficeTurnoverConditions',
-            'RetailOfficeBuildingSpecs',
-            'RetailOfficeOtherDetailExtn',
-        ])->findOrFail($id);
-
-        $data = $request->validated();
-
-        DB::transaction(function () use ($retailoffice, $data) {
-
-            // Update the already existing listing fields
-            $this->updateListing($retailoffice->listing, $data['listing'] ?? []);
-
-            // Update for its components
-            $this->updateListingComponents($retailoffice->listing, $data['listing'] ?? []);
-
-            // Update officespace components
-            $retailoffice->retailOfficeListingPropertyDetails()->update($data['retail_office_listing_property_details'] ?? []);
-            $retailoffice->retailOfficeTurnoverConditions()->update($data['retail_office_turnover_conditions'] ?? []);
-            $retailoffice->retailOfficeBuildingSpecs()->update($data['retail_office_building_specs'] ?? []);
-            $retailoffice->retailOfficeOtherDetailExtn()->update($data['retail_office_other_detail_extn'] ?? []);
-
-        });
-
-        // 🧾 Return fully refreshed listing with all relationships
-        $updated = RetailOfficeListing::with([
-            'listing.account',
-            'listing.location',
-            'listing.leaseDocument',
-            'listing.leaseTermsAndConditions',
-            'listing.otherDetail',
-            'listing.contacts',
-            'listing.inquiries',
-            'RetailOfficeListingPropertyDetails',
-            'RetailOfficeTurnoverConditions',
-            'RetailOfficeBuildingSpecs',
-            'RetailOfficeOtherDetailExtn',
-        ])->findOrFail($retailoffice->id);
-
-        return response()->json([
-            'message' => 'officespace listing successfully updated.',
-            'data' => $updated
-        ], 201);
-    }
 }

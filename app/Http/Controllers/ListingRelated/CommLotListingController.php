@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Models\Contact;
 use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -123,21 +124,43 @@ class CommLotListingController extends Controller
 
     public function store(StoreCommLotListingRequest $request): JsonResponse
     {
-        $commLot = DB::transaction(function () use ($request) {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $commLot = DB::transaction(function () use ($request, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $data = $request->validated();
 
-            // 🏗️ Create CommLot morph target
-            $commLot = CommLotListing::create([
-                //'PEZA_accredited' => $data['PEZA_accredited'] ?? false
-            ]);
+            $commLot = CommLotListing::create();
 
-            // 🔗 Create listing + attach morph
+            // 📧 Contact creation
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            $data['listing']['contacts'] = collect($pivotData)->map(function ($pivot, $contactId) {
+                return ['contact_id' => $contactId, 'company' => $pivot['company']];
+            })->values()->toArray();
+
             $listing = $this->createListing($data['listing'], $commLot);
-
-            // 📎 Add nested listing components
             $this->createListingComponents($listing, $data['listing']);
 
-            // 🧱 Add CommLot-specific components
             if (!empty($data['comm_lot_turnover_conditions'])) {
                 $commLot->commLotTurnoverConditions()->create($data['comm_lot_turnover_conditions']);
             }
@@ -146,10 +169,15 @@ class CommLotListingController extends Controller
                 $commLot->commLotListingPropertyDetails()->create($data['comm_lot_listing_property_details']);
             }
 
+            $listingRedirectUrl = route('commlot.show', ['id' => $commLot->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
+
             return $commLot;
         });
 
-        // ⏪ Fetch inserted data with full relationships
         $fullCommLot = CommLotListing::with([
             'listing.account',
             'listing.location',
@@ -160,12 +188,96 @@ class CommLotListingController extends Controller
             'listing.inquiries',
             'commLotTurnoverConditions',
             'commLotListingPropertyDetails'
-        ])->find($commLot->id);
+        ])->findOrFail($commLot->id);
 
         return response()->json([
-            'message' => 'CommLot listing successfully created with all components.',
-            'data' => $fullCommLot
+            'message' => 'CommLot listing successfully created.',
+            'data' => $fullCommLot,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
         ], 201);
+    }
+
+    public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $commLot = CommLotListing::with([
+            'listing',
+            'commLotListingPropertyDetails',
+            'commLotTurnoverConditions'
+        ])->findOrFail($id);
+
+        $data = $request->validated();
+
+        DB::transaction(function () use ($commLot, $data, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
+            $commLot->update([
+                'PEZA_accredited' => $data['PEZA_accredited'] ?? $commLot->PEZA_accredited,
+            ]);
+
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
+
+            $data['listing']['contacts'] = collect($pivotData)->map(function ($pivot, $contactId) {
+                return ['contact_id' => $contactId, 'company' => $pivot['company']];
+            })->values()->toArray();
+
+            $this->updateListing($commLot->listing, $data['listing'] ?? []);
+            $this->updateListingComponents($commLot->listing, $data['listing'] ?? []);
+
+            $commLot->commLotListingPropertyDetails()->update($data['comm_lot_listing_property_details'] ?? []);
+            $commLot->commLotTurnoverConditions()->update($data['comm_lot_turnover_conditions'] ?? []);
+
+            $listingRedirectUrl = route('commlot.show', ['id' => $commLot->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
+        });
+
+        $updated = CommLotListing::with([
+            'listing.account',
+            'listing.location',
+            'listing.leaseDocument',
+            'listing.leaseTermsAndConditions',
+            'listing.otherDetail',
+            'listing.contacts',
+            'listing.inquiries',
+            'commLotListingPropertyDetails',
+            'commLotTurnoverConditions'
+        ])->findOrFail($commLot->id);
+
+        return response()->json([
+            'message' => 'CommLot listing successfully updated.',
+            'data' => $updated,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
+        ], 200);
     }
 
     public function destroy($id): JsonResponse
@@ -183,54 +295,6 @@ class CommLotListingController extends Controller
         return response()->json([
             'message' => 'Commercial Lot listing and related data successfully soft deleted.'
         ]);
-    }
-
-    public function update(UpdateCommLotListingRequest $request, $id): JsonResponse
-    {
-        $commlot = CommLotListing::with([
-            'listing',
-            'commlotListingPropertyDetails',
-            'commlotTurnoverConditions'
-        ])->findOrFail($id);
-
-        $data = $request->validated();
-
-        DB::transaction(function () use ($commlot, $data) {
-            // 🧱 Update commlot morph record
-            $commlot->update([
-                'PEZA_accredited' => $data['PEZA_accredited'] ?? $commlot->PEZA_accredited,
-            ]);
-
-            // 🧍 Update shared listing fields
-            $this->updateListing($commlot->listing, $data['listing'] ?? []);
-
-            // 🔄 Update listing components
-            $this->updateListingComponents($commlot->listing, $data['listing'] ?? []);
-
-            // ⚙️ Update listing components
-            $commlot->CommLotListingPropertyDetails()->update($data['comm_lot_listing_property_details'] ?? []);
-            $commlot->CommLotTurnoverConditions()->update($data['comm_lot_turnover_conditions'] ?? []);
-            return $commlot;
-        });
-
-        // 🧾 Return fully refreshed listing with all relationships
-        $updated = CommLotListing::with([
-            'listing.account',
-            'listing.location',
-            'listing.leaseDocument',
-            'listing.leaseTermsAndConditions',
-            'listing.otherDetail',
-            'listing.contacts',
-            'listing.inquiries',
-            'commlotListingPropertyDetails',
-            'commlotTurnoverConditions'
-
-        ])->findOrFail($commlot->id);
-
-        return response()->json([
-            'message' => 'Commercial Lot listing successfully updated.',
-            'data' => $updated
-        ], 201);
     }
 
     public function restore($id): JsonResponse

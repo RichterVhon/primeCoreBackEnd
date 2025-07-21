@@ -13,7 +13,7 @@ use App\Enums\Meter;
 trait HasListingValidationRules
 {
     public function listingRules(): array
-    {  
+    {
         return [
             // 🧍 Core Listing
             'listing.status' => ['required', new Enum(ListingStatus::class)],
@@ -55,14 +55,14 @@ trait HasListingValidationRules
 
             // 🧑‍💼 Contacts
             'listing.contacts' => 'nullable|array',
-            'listing.contacts.*.contact_id' => 'required|exists:contacts,id',
+            'listing.contacts.*.email' => 'required|email',
             'listing.contacts.*.company' => 'nullable|string',
         ];
     }
 
     public function listingRulesForUpdate(): array
     {
-    return [
+        return [
             'listing.status' => ['sometimes', new Enum(ListingStatus::class)],
             'listing.project_name' => 'sometimes|string',
             'listing.property_name' => 'sometimes|string',
@@ -96,8 +96,9 @@ trait HasListingValidationRules
             'listing.other_detail.water_meter' => ['sometimes', new Enum(Meter::class)],
             'listing.other_detail.year_built' => 'nullable|integer',
 
+            // 🧑‍💼 Contacts
             'listing.contacts' => 'nullable|array',
-            'listing.contacts.*.contact_id' => 'required|exists:contacts,id',
+            'listing.contacts.*.email' => 'required|email',
             'listing.contacts.*.company' => 'nullable|string',
         ];
     }

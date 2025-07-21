@@ -200,41 +200,9 @@ class AccountController extends Controller
     }
 
 
-
     // public function store(StoreAccountRequest $request): JsonResponse
     // {
-    //     $account = DB::transaction(function () use ($request) {
-    //         $data = $request->validated();
-
-    //         // 🏗 Create Account
-    //         $account = Account::create([
-    //             'name' => $data['name'],
-    //             'email' => $data['email'],
-    //             'password' => $data['password'], // Laravel will auto-hash via model cast
-    //             'role' => $data['role'],
-    //             'status' => $data['status'],
-    //         ]);
-
-    //         // 🔗 Attach contacts via pivot table, if any
-    //         if (!empty($data['contacts'])) {
-    //             $pivotPayload = collect($data['contacts'])->mapWithKeys(function ($entry) {
-    //                 return [
-    //                     $entry['contact_id'] => ['company_name' => $entry['company_name'] ?? null]
-    //                 ];
-    //             });
-
-    //             $account->contacts()->syncWithoutDetaching($pivotPayload);
-    //         }
-
-    //         return $account->load([
-    //             'contacts' => fn($q) => $q->withPivot('company_name')
-    //         ]);
-    //     });
-
-    //     return response()->json([
-    //         'message' => 'Account successfully created with linked contacts.',
-    //         'data' => $account
-    //     ], 201);
+    // ...
     // } moved to RegistedAccountController
 
     public function update(Request $request, $id): JsonResponse

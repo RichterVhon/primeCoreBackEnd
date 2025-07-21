@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Models\Contact;
 use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -89,7 +90,7 @@ class OfficeSpaceListingController extends Controller
             ]
         ]);
     }
-    use HandlesListingCreation;
+    
 
     public function show($id): JsonResponse
     {
@@ -112,40 +113,66 @@ class OfficeSpaceListingController extends Controller
         return response()->json(['data' => $Office]);
     }
 
+    use HandlesListingCreation;
+
     public function store(StoreOfficeSpaceListingRequest $request): JsonResponse
     {
-        $officeSpace = DB::transaction(function () use ($request) {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $officeSpace = DB::transaction(function () use ($request, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $data = $request->validated();
 
-            // Create office listing morph target
             $officeSpace = OfficeSpaceListing::create([
-                // 'PEZA_accredited' => $data['PEZA_accredited'] ?? null // if applicable
+                'PEZA_accredited' => $data['PEZA_accredited'] ?? null
             ]);
 
-            // Create listing + attach morph
-            $listing = $this->createListing($data['listing'], $officeSpace);
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
 
-            // 📎 Add nested core listing components
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
+
+            $listing = $this->createListing($data['listing'], $officeSpace);
             $this->createListingComponents($listing, $data['listing']);
-            $otherDetail = $listing->otherDetail;
-            $leaseterms = $listing->leaseTermsAndConditions;
-            // 🔗 Add office-specific components
+
             $officeSpace->officeSpecs()->create($data['office_specs'] ?? []);
             $officeSpace->officeTurnoverConditions()->create($data['office_turnover_conditions'] ?? []);
             $officeSpace->officeListingPropertyDetails()->create($data['office_listing_property_details'] ?? []);
-            $officeSpace->officeOtherDetailExtn()->create(array_merge(
-                $data['office_other_detail_extn'] ?? [],
-                ['other_detail_id' => $otherDetail->id]
-            ));
-            $officeSpace->officeLeaseTermsAndConditionsExtn()->create(array_merge(
-                $data['office_lease_terms_extn'] ?? [],
-                ['lease_terms_and_conditions_id' => $leaseterms->id]
-            ));
+            $officeSpace->officeOtherDetailExtn()->create(array_merge($data['office_other_detail_extn'] ?? [], [
+                'other_detail_id' => $listing->otherDetail->id
+            ]));
+            $officeSpace->officeLeaseTermsAndConditionsExtn()->create(array_merge($data['office_lease_terms_extn'] ?? [], [
+                'lease_terms_and_conditions_id' => $listing->leaseTermsAndConditions->id
+            ]));
+
+            $listingRedirectUrl = route('officespace.show', ['id' => $officeSpace->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
 
             return $officeSpace;
         });
 
-        // ⏪ Fetch full relationship tree
         $fullOfficeSpace = OfficeSpaceListing::with([
             'listing.account',
             'listing.location',
@@ -162,48 +189,74 @@ class OfficeSpaceListingController extends Controller
         ])->findOrFail($officeSpace->id);
 
         return response()->json([
-            'message' => 'Office listing successfully created with all components.',
-            'data' => $fullOfficeSpace
+            'message' => 'Office listing successfully created.',
+            'data' => $fullOfficeSpace,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
         ], 201);
     }
 
     public function update(UpdateOfficeSpaceListingRequest $request, $id): JsonResponse
     {
-        $Office = OfficeSpaceListing::with([
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $office = OfficeSpaceListing::with([
             'listing',
-            'OfficeListingPropertyDetails',
-            'OfficeTurnoverConditions',
-            'OfficeSpecs',
-            'OfficeLeaseTermsAndConditionsExtn',
-            'OfficeOtherDetailExtn',
+            'officeSpecs',
+            'officeTurnoverConditions',
+            'officeListingPropertyDetails',
+            'officeOtherDetailExtn',
+            'officeLeaseTermsAndConditionsExtn',
         ])->findOrFail($id);
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($Office, $data) {
+        DB::transaction(function () use ($office, $data, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
 
-            // Update the already existing listing fields
-            $this->updateListing($Office->listing, $data['listing'] ?? []);
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
 
-            // Update for its components
-            $this->updateListingComponents($Office->listing, $data['listing'] ?? []);
+            $this->updateListing($office->listing, $data['listing'] ?? []);
+            $this->updateListingComponents($office->listing, $data['listing'] ?? []);
 
-            // Update Office components
-            $Office->officeSpecs()->update($data['office_specs'] ?? []);
-            $Office->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
-            $Office->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
-            $Office->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
-            $Office->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
+            $office->officeSpecs()->update($data['office_specs'] ?? []);
+            $office->officeTurnoverConditions()->update($data['office_turnover_conditions'] ?? []);
+            $office->officeListingPropertyDetails()->update($data['office_listing_property_details'] ?? []);
+            $office->officeOtherDetailExtn()->update($data['office_other_detail_extn'] ?? []);
+            $office->officeLeaseTermsAndConditionsExtn()->update($data['office_lease_terms_extn'] ?? []);
 
-
-            // $Office->officespaceListingPropDetails()->update($data['officespace_listing_prop_details'] ?? []);
-            // $Office->officespaceTurnoverConditions()->update($data['officespace_turnover_conditions'] ?? []);
-            // $Office->officespaceSpecs()->update($data['officespace_specs'] ?? []);
-            // $Office->officespaceLeaseRate()->update($data['officespace_lease_rates'] ?? []);
+            $listingRedirectUrl = route('officespace.show', ['id' => $office->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
         });
 
-        // 🧾 Return fully refreshed listing with all relationships
-        $updated = officespaceListing::with([
+        $updated = OfficeSpaceListing::with([
             'listing.account',
             'listing.location',
             'listing.leaseDocument',
@@ -216,12 +269,17 @@ class OfficeSpaceListingController extends Controller
             'officeListingPropertyDetails',
             'officeOtherDetailExtn',
             'officeLeaseTermsAndConditionsExtn',
-        ])->findOrFail($Office->id);
+        ])->findOrFail($office->id);
 
         return response()->json([
             'message' => 'Office listing successfully updated.',
-            'data' => $updated
-        ], 201);
+            'data' => $updated,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
+        ], 200);
     }
 
     public function destroy($id): JsonResponse
