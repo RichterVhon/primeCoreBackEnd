@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ListingRelated;
 
+use App\Models\Contact;
 use App\Enums\AccountRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,28 +127,56 @@ class IndLotListingController extends Controller
 
     public function store(StoreIndLotListingRequest $request): JsonResponse
     {
-        $indlot = DB::transaction(function () use ($request) {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
+        $indlot = DB::transaction(function () use ($request, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $data = $request->validated();
 
-            // Create indlot morph target
             $indlot = IndLotListing::create([
                 'PEZA_accredited' => $data['PEZA_accredited']
             ]);
 
-            // Create listing + attach morph
-            $listing = $this->createListing($data['listing'], $indlot);
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
 
-            // 📎 Add nested listing components
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
+
+            $listing = $this->createListing($data['listing'], $indlot);
             $this->createListingComponents($listing, $data['listing']);
 
-            // Add IndLot-specific components
             $indlot->IndLotListingPropertyDetails()->create($data['ind_lot_listing_property_details'] ?? []);
             $indlot->IndLotTurnoverConditions()->create($data['ind_lot_turnover_conditions'] ?? []);
             $indlot->IndLotLeaseRates()->create($data['ind_lot_lease_rates'] ?? []);
+
+            $listingRedirectUrl = route('indlot.show', ['id' => $indlot->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
+
             return $indlot;
         });
 
-        // ⏪ Fetch inserted data with full relationships
         $fullIndLot = IndLotListing::with([
             'listing.account',
             'listing.location',
@@ -159,46 +188,76 @@ class IndLotListingController extends Controller
             'IndLotListingPropertyDetails',
             'IndLotTurnoverConditions',
             'IndLotLeaseRates'
-
         ])->findOrFail($indlot->id);
 
         return response()->json([
-            'message' => 'Industrial Lot listing successfully created with all components.',
-            'data' => $fullIndLot
+            'message' => 'Industrial Lot listing successfully created.',
+            'data' => $fullIndLot,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
         ], 201);
     }
 
     public function update(UpdateIndLotListingRequest $request, $id): JsonResponse
     {
+        $user = Auth::user();
+        if (($user->role !== AccountRole::Agent) && ($user->role !== AccountRole::Admin)) {
+            return response()->json([
+                'message' => 'Forbidden: Agents or Admin only'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $createdContacts = [];
+        $listingRedirectUrl = null;
+        $contactRedirectUrl = null;
+
         $indlot = IndLotListing::with([
             'listing',
-            'indlotListingPropertyDetails',
-            'indlotTurnoverConditions',
-            'indlotLeaseRates'
+            'IndLotListingPropertyDetails',
+            'IndLotTurnoverConditions',
+            'IndLotLeaseRates'
         ])->findOrFail($id);
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($indlot, $data) {
-            // 🧱 Update indlot morph record
+        DB::transaction(function () use ($indlot, $data, &$createdContacts, &$listingRedirectUrl, &$contactRedirectUrl) {
             $indlot->update([
                 'PEZA_accredited' => $data['PEZA_accredited'] ?? $indlot->PEZA_accredited,
             ]);
 
-            // 🧍 Update shared listing fields
-            $this->updateListing($indlot->listing, $data['listing'] ?? []);
+            $pivotData = [];
+            foreach ($data['listing']['contacts'] ?? [] as $entry) {
+                if (!empty($entry['email'])) {
+                    $contact = Contact::firstOrCreate(['email_address' => $entry['email']], []);
+                    if ($contact->wasRecentlyCreated) {
+                        $createdContacts[] = $contact;
+                    }
+                    $pivotData[$contact->id] = ['company' => $entry['company'] ?? null];
+                }
+            }
 
-            // 🔄 Update listing components
+            $data['listing']['contacts'] = collect($pivotData)->map(fn($pivot, $contactId) => [
+                'contact_id' => $contactId,
+                'company' => $pivot['company']
+            ])->values()->toArray();
+
+            $this->updateListing($indlot->listing, $data['listing'] ?? []);
             $this->updateListingComponents($indlot->listing, $data['listing'] ?? []);
 
-            // ⚙️ Update IndLot components
             $indlot->IndLotListingPropertyDetails()->update($data['ind_lot_listing_property_details'] ?? []);
             $indlot->IndLotTurnoverConditions()->update($data['ind_lot_turnover_conditions'] ?? []);
             $indlot->IndLotLeaseRates()->update($data['ind_lot_lease_rates'] ?? []);
-            return $indlot;
+
+            $listingRedirectUrl = route('indlot.show', ['id' => $indlot->id]);
+            $contactRedirectUrl = match (count($createdContacts)) {
+                1 => route('contacts.edit', ['id' => $createdContacts[0]->id]),
+                default => route('contacts.index')
+            };
         });
 
-        // 🧾 Return fully refreshed listing with all relationships
         $updated = IndLotListing::with([
             'listing.account',
             'listing.location',
@@ -214,9 +273,15 @@ class IndLotListingController extends Controller
 
         return response()->json([
             'message' => 'Industrial Lot listing successfully updated.',
-            'data' => $updated
-        ], 201);
+            'data' => $updated,
+            'new_contacts' => collect($createdContacts)->map(fn($c) => [
+                'email' => $c->email_address
+            ]),
+            'contact_redirect_url' => $contactRedirectUrl,
+            'listing_show_url' => $listingRedirectUrl
+        ], 200);
     }
+
 
     public function destroy($id): JsonResponse
     {

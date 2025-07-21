@@ -3,13 +3,15 @@
 namespace App\Models;
 use App\Traits\HasSearch;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Contact extends Model {
+class Contact extends Model
+{
     use SoftDeletes;
     use HasFactory;
     use HasSearch;
@@ -55,4 +57,19 @@ class Contact extends Model {
             ->withPivot('company_name', 'deleted_at') //, 'relationship_type')
             ->withTimestamps();
     }
+
+    protected static function booted()
+    {
+        static::created(function (Contact $contact) {
+            $accountId = Auth::user()->id;
+
+            if ($accountId) {
+                // Attach the logged-in user to the pivot (account_contact)
+                $contact->accounts()->syncWithoutDetaching([
+                    $accountId => ['company_name' => null] // Optional: you can set company_name if known
+                ]);
+            }
+        });
+    }
+
 }
